@@ -86,7 +86,7 @@ class MultiReg:
         self.set_defaults()
 
     def set_defaults(self):         # defaults that can be overridden at runtime
-        self.log = True
+        self.log = False
         self.log_interval = 500
         
         # Following 3 attributes govern the use of momentum in dynamically 
@@ -98,8 +98,8 @@ class MultiReg:
         
         self.add_bias()
 
-        self.thetas = []
         self.current_error = float('inf')
+        self.thetas = []
         self.build_thetas()
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
@@ -141,26 +141,21 @@ class MultiReg:
         partials = self.build_partials()
         # new_cost_error = self.calc_cost_error(partials)         #PH:*** implement this, need to test on new thetas. Will need to alter hypothesis calculation to use NEW thetas. try to use an iterator?
         
-        old_thetas, old_error = self.thetas, self.current_error
-        
         new_thetas = [ curr_theta - self.alpha * partial_term
                         for partial_term, curr_theta 
                         in zip(partials, self.thetas) ]
-        self.thetas = new_thetas
-        self.current_error = self.calc_cost_error() #PH:*** MUST PUT AFTER SETTING THATS... OR OLD ERROR AND NEW ERROR NEVER CHANGE!
+        new_error = self.calc_cost_error(new_thetas)
             
         # lower learn rate, and revert thetas and errors if grad descent fails
-        if self.increase_momentum and self.current_error < old_error:
+        if self.increase_momentum and new_error < self.current_error:
             self.alpha *= self.quick_factor
-        elif self.current_error > old_error:
+        elif new_error > self.current_error:
             self.increase_momentum = False      # prevent further scaling momentum up
             
             self.alpha *= self.brake_factor
-            self.thetas, self.current_error = old_thetas, old_error         #PH:*** keeping this Fs everything up...
-            # return                              # break out without setting new thetas
+            return                              # break out without setting new thetas
         
-        # self.current_error = new_cost_error
-        # self.thetas = new_thetas
+        self.thetas, self.current_error = new_thetas, new_error
 
     # REM: can't use generator -- don't want to alter self.thetas as we're running thru
     def build_partials(self):
@@ -221,7 +216,7 @@ class MultiReg:
 # ]
 
 # 13962 iterations
-# 13963 iterations
+# 4465 iterations post-momentum implementation
 test_data_non_vectors = [           
     [4, 0],
     [5, 4],
