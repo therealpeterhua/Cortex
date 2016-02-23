@@ -18,14 +18,14 @@ class Utils:
         if data_type is list:
             list_length = len(first_item)
             Utils._validate_list(data, list_length)
-        
+
         elif data_type is dict:
             input_length = len(first_item['input'])
             Utils._validate_dict(data, input_length)
-        
+
         else:
             raise Exception('Data must be a list or dictionary.')
-                    
+
     @staticmethod
     def vectorize(data):
         if type(data[0]) is not list:
@@ -37,21 +37,21 @@ class Utils:
                 'input': list_item[0:output_idx],
                 'output': list_item[output_idx]
             }
-        
+
         return data
-    
+
     #PH:*** change to implementation of `any`. DRY UP THE BELOW
     @staticmethod
     def _validate_list(data, list_length):
         data_type = list
-        for item in data:               
+        for item in data:
             item_type, item_length = type(item), len(item)
             if (item_type != data_type) or (item_length != list_length):
                 error_message = 'Expecting %s of length %s, instead got %s of length %s.' % (
                     data_type, list_length, item_type, item_length
                 )
                 raise Exception(error_message)
-    
+
     #PH:*** change to implementation of `any`. DRY UP THE BELOW
     @staticmethod
     def _validate_dict(data, input_length):
@@ -75,7 +75,7 @@ class MultiReg:
     def __init__(self, data = None):
         if data is not None:
             self.load_training_data(data)
-        
+
     @property
     def thetas():
         return self.thetas
@@ -86,16 +86,16 @@ class MultiReg:
         self.set_defaults()
 
     def set_defaults(self):         # defaults that can be overridden at runtime
-        self.log = False
+        self.log = True
         self.log_interval = 500
-        
-        # Following 3 attributes govern the use of momentum in dynamically 
+
+        # Following 3 attributes govern the use of momentum in dynamically
         # adjusting the learning rate. Setting self.increase_momentum to False
         # prevents the use of the quick_factor to speed up gradient descent
         self.increase_momentum = True
         self.quick_factor = 1.1
         self.brake_factor = 0.6
-        
+
         self.add_bias()
 
         self.current_error = float('inf')
@@ -138,26 +138,24 @@ class MultiReg:
         print('Finished regression in ' + str(iterations) + ' iterations')
 
     def calc_new_thetas(self):
-        partials = self.build_partials()
-        # new_cost_error = self.calc_cost_error(partials)         #PH:*** implement this, need to test on new thetas. Will need to alter hypothesis calculation to use NEW thetas. try to use an iterator?
-        
-        new_thetas = [ curr_theta - self.alpha * partial_term
-                        for partial_term, curr_theta 
-                        in zip(partials, self.thetas) ]
-        new_error = self.calc_cost_error(new_thetas)
-            
-        # lower learn rate, and revert thetas and errors if grad descent fails
-        if self.increase_momentum and new_error < self.current_error:
-            self.alpha *= self.quick_factor
-        elif new_error > self.current_error:
-            self.increase_momentum = False      # prevent further scaling momentum up
-            
-            self.alpha *= self.brake_factor
-            return                              # break out without setting new thetas
-        
-        self.thetas, self.current_error = new_thetas, new_error
+        old_thetas, old_error = self.thetas, self.current_error
 
-    # REM: can't use generator -- don't want to alter self.thetas as we're running thru
+        partials = self.build_partials()
+        new_thetas = [ curr_theta - self.alpha * partial_term
+                        for partial_term, curr_theta
+                        in zip(partials, self.thetas) ]
+
+        self.thetas = new_thetas
+        self.current_error = self.calc_cost_error()
+
+        # lower learn rate, and revert thetas and errors if grad descent fails to reduce error
+        if self.increase_momentum and self.current_error < old_error:
+            self.alpha *= self.quick_factor
+        elif self.current_error > old_error:
+            self.increase_momentum = False      # prevent further scaling momentum up
+            self.alpha *= self.brake_factor
+            self.thetas, self.current_error = old_thetas, old_error
+
     def build_partials(self):
         partials = []
 
@@ -175,29 +173,29 @@ class MultiReg:
 
         return partials
 
-    def calc_hypothesis(self, input_row, used_thetas = None):
-        if used_thetas is None:
-            used_thetas = self.thetas
-        return sum( theta * input_val 
-                    for theta, input_val 
-                    in zip(used_thetas, input_row) )
+    def calc_hypothesis(self, input_row, thetas = None):
+        if thetas is None:
+            thetas = self.thetas
+        return sum( theta * input_val
+                    for theta, input_val
+                    in zip(thetas, input_row) )
 
     def log_params(self, num_iterations):
         dividing_line = '--------------------------------------'
         print('After %s iterations...\nThetas are %s\nErrors are %s\n%s' % (
             num_iterations, self.thetas, self.current_error, dividing_line
         ))
-    
-    def calc_cost_error(self, used_thetas = None):
-        return self.avg_mse(used_thetas)
 
-    def avg_mse(self, used_thetas):
+    def calc_cost_error(self):
+        return self.avg_mse()
+
+    def avg_mse(self):
         squared_err_sum = 0
         zipped_data_iters = zip(self.input_iter(), self.output_iter())
 
         for i, (input_row, output_val) in enumerate(zipped_data_iters):
             actual_val = output_val
-            predicted_val = self.calc_hypothesis(input_row, used_thetas)
+            predicted_val = self.calc_hypothesis(input_row)
             squared_err_sum += (predicted_val - actual_val) ** 2
 
         return squared_err_sum / (2 * len(self.training_data))
@@ -216,8 +214,8 @@ class MultiReg:
 # ]
 
 # 13962 iterations
-# 4465 iterations post-momentum implementation
-test_data_non_vectors = [           
+# 13963 iterations
+test_data_non_vectors = [
     [4, 0],
     [5, 4],
     [6, 8],
