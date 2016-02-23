@@ -1,6 +1,10 @@
 from pdb import set_trace
 import data_utils
 
+'''
+This actually works for python 2... only relevant differences are `zip` --> itertools.izip and object inheritance on class declaration?
+'''
+
 class Utils:
     # The goal of this method is to raise informative errors where possible, ie. inconsistent data types or data lengths.
     @staticmethod
@@ -59,7 +63,6 @@ class Utils:
             if type(item) != data_type:
                 raise Exception('Expecting %s, got %s') % (data_type, item_type)
             if item_input_len != input_length or item_output_len != 1:
-                set_trace()
                 error_message = 'Expecting input and output lengths of %s and %s, respectively. Instead, got %s and %s.' % (
                     input_length, 1, item_input_len, item_output_len
                 )
@@ -83,16 +86,20 @@ class MultiReg:
         self.set_defaults()
 
     def set_defaults(self):         # defaults that can be overridden at runtime
-        self.log = False
+        self.log = True
+        self.log_interval = 500
         
-        self.upward_momentum = 1.1
-        self.downward_momentum = 0.70
-        self.increment_upward_momentum = True   #PH:*** flip this off after first downward revision...
+        # Following 3 attributes govern the use of momentum in dynamically 
+        # adjusting the learning rate. Setting self.increase_momentum to False
+        # prevents the use of the quick_factor to speed up gradient descent
+        self.increase_momentum = True
+        self.quick_factor = 1.1
+        self.brake_factor = 0.6
         
         self.add_bias()
 
         self.thetas = []
-        self.cost_error = float('inf')
+        self.current_error = float('inf')
         self.build_thetas()
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
@@ -121,9 +128,9 @@ class MultiReg:
     def gradient_descent(self):
         iterations = 0
 
-        while (self.calc_cost() > self.threshold and iterations < self.max_iters):
-            if self.log:
-                self.log_params()
+        while (self.current_error > self.threshold and iterations < self.max_iters):
+            if self.log and not iterations % self.log_interval:
+                self.log_params(iterations)
             self.calc_new_thetas()
             iterations += 1
 
@@ -132,12 +139,28 @@ class MultiReg:
 
     def calc_new_thetas(self):
         partials = self.build_partials()
-        # new_cost_error = self.calc_cost(new_cost_error)         #PH:*** implement this, need to test on new thetas. Will need to alter hypothesis calculation to use NEW thetas. try to use an iterator?
+        # new_cost_error = self.calc_cost_error(partials)         #PH:*** implement this, need to test on new thetas. Will need to alter hypothesis calculation to use NEW thetas. try to use an iterator?
         
-        if new_cost_error > self.cost_error and self.increase_momentum:
-            self.alpha *= 
-        for j, curr_theta in enumerate(self.thetas):
-            self.thetas[j] = curr_theta - self.alpha * partials[j]
+        old_thetas, old_error = self.thetas, self.current_error
+        
+        new_thetas = [ curr_theta - self.alpha * partial_term
+                        for partial_term, curr_theta 
+                        in zip(partials, self.thetas) ]
+        self.thetas = new_thetas
+        self.current_error = self.calc_cost_error() #PH:*** MUST PUT AFTER SETTING THATS... OR OLD ERROR AND NEW ERROR NEVER CHANGE!
+            
+        # lower learn rate, and revert thetas and errors if grad descent fails
+        if self.increase_momentum and self.current_error < old_error:
+            self.alpha *= self.quick_factor
+        elif self.current_error > old_error:
+            self.increase_momentum = False      # prevent further scaling momentum up
+            
+            self.alpha *= self.brake_factor
+            self.thetas, self.current_error = old_thetas, old_error         #PH:*** keeping this Fs everything up...
+            # return                              # break out without setting new thetas
+        
+        # self.current_error = new_cost_error
+        # self.thetas = new_thetas
 
     # REM: can't use generator -- don't want to alter self.thetas as we're running thru
     def build_partials(self):
@@ -157,28 +180,29 @@ class MultiReg:
 
         return partials
 
-    def calc_hypothesis(self, input_row):
-        output = 0
-        for i, input_val in enumerate(input_row):
-            output += input_val * self.thetas[i]
+    def calc_hypothesis(self, input_row, used_thetas = None):
+        if used_thetas is None:
+            used_thetas = self.thetas
+        return sum( theta * input_val 
+                    for theta, input_val 
+                    in zip(used_thetas, input_row) )
 
-        return output
-
-    def log_params(self):
-        print( 'thetas are ' + str(self.thetas) )
-        print( 'errors are ' + str(self.calc_cost()) )
-        print( '--------------------------------------' )
+    def log_params(self, num_iterations):
+        dividing_line = '--------------------------------------'
+        print('After %s iterations...\nThetas are %s\nErrors are %s\n%s' % (
+            num_iterations, self.thetas, self.current_error, dividing_line
+        ))
     
-    def calc_cost(self):
-        return self.avg_mse()
+    def calc_cost_error(self, used_thetas = None):
+        return self.avg_mse(used_thetas)
 
-    def avg_mse(self):
+    def avg_mse(self, used_thetas):
         squared_err_sum = 0
         zipped_data_iters = zip(self.input_iter(), self.output_iter())
 
         for i, (input_row, output_val) in enumerate(zipped_data_iters):
             actual_val = output_val
-            predicted_val = self.calc_hypothesis(input_row)
+            predicted_val = self.calc_hypothesis(input_row, used_thetas)
             squared_err_sum += (predicted_val - actual_val) ** 2
 
         return squared_err_sum / (2 * len(self.training_data))
@@ -196,7 +220,9 @@ class MultiReg:
 #     [3, 3, 3]
 # ]
 
-test_data_non_vectors = [           # 13962 iterations
+# 13962 iterations
+# 13963 iterations
+test_data_non_vectors = [           
     [4, 0],
     [5, 4],
     [6, 8],
