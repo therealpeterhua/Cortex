@@ -20,8 +20,8 @@ regression = LnrReg()
 class LogReg(LnrReg):
 
     @staticmethod
-    def sigmoid(z):
-        return 1 / (1 + e ** (-z))
+    def sigmoid(val):
+        return 1 / (1 + e ** (-val))
 
     def __init__(self, data = None):
         super(LogReg, self).__init__(data)
@@ -68,12 +68,12 @@ test_data = [
 
 regression = LogReg(test_data)
 regression.train()
-print regression.run([1, 1, 0.5])
-print regression.run([1, 5, 4])
-print regression.run([1, 7, 5])
-print regression.run([1, 8, 9])
-print regression.run([1, 9, 11])
-print regression.run([1, 10, 15])
+print regression.run([1, 0.5])
+print regression.run([5, 4])
+print regression.run([7, 5])
+print regression.run([8, 9])
+print regression.run([9, 11])
+print regression.run([10, 15])
 
 # test_data = [
 #     {'input': [0], 'output': 0},

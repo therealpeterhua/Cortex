@@ -4,7 +4,15 @@ from itertools import izip
 
 import utils
 
+'''
+Pruning algo -- disregard nodes that receive low weights
+'''
+
 class NeuralNet(object):
+    @staticmethod
+    def sigmoid(val):
+        return 1 / (1 + e ** (-val))
+
     def __init__(data):
         if data is not None:
             self.load_training_data(data)
@@ -17,32 +25,39 @@ class NeuralNet(object):
     def set_defaults(self):         # defaults that can be overridden at runtime
         self.log = True
         self.log_interval = 2000
-        self.hidden_layers = 3
 
-        # Following 3 attributes govern the use of momentum in dynamically
-        # adjusting the learning rate. Setting self.increase_momentum to False
-        # prevents the use of the quick_factor to speed up gradient descent
-        self.increase_momentum = True
-        self.quick_factor = 1.1
-        self.brake_factor = 0.6
+        self.weights = []
+        self.build_weights()
 
-        self.add_bias()
-
-        self.current_error = float('inf')
-        self.theta_mtrx = []
-        self.build_thetas()
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.alpha = 0.01               # learn rate   PH:*** rename?
-        self.threshold = 0.00000001     # max acceptable AMSE
-        self.max_iters = 50000          # make a fn of size of dataset?
 
-    def build_thetas():
+        self.hidden_layer = max(2, self.suggested_hidden_layers())
+
+    def suggested_hidden_layers():
+        num_rows = len(self.training_data)
+        # PH:*** build out more!
+        # HOW TO CHOOSE NUMBER OF NODES?
+        #http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
+
+    def set_weights(nested_matrices):       #PH:*** used only for testing.. lol
+        self.weights = nested_matrices
+
+    def build_weights():
         pass
 
     def train():
         pass
 
+    def forward_prop():
+        pass
+
+    def activate():
+        pass
+
+
+    # PH: below are lifted straight from linear regression
 
     def __init__(self, data = None):
         if data is not None:
@@ -171,3 +186,14 @@ class NeuralNet(object):
             squared_err_sum += (predicted_val - actual_val) ** 2
 
         return squared_err_sum / (2 * len(self.training_data))
+
+
+def run_input(input_row):
+    pass
+
+def forward_propagate(thetas, nodes):
+    pass
+
+
+weights = []
+nodes = [[1, 0], []]

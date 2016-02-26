@@ -31,7 +31,7 @@ class LnrReg(object):
         self.quick_factor = 1.1
         self.brake_factor = 0.6
 
-        self.add_bias()
+        self.add_training_bias()
 
         self.current_error = float('inf')
         self.thetas = []
@@ -45,9 +45,12 @@ class LnrReg(object):
     def build_thetas(self):
         self.thetas = [0 for _ in self.training_data[0]['input']]
 
-    def add_bias(self):
+    def add_training_bias(self):
         for item in self.training_data:
-            item['input'].insert(0, 1)
+            self.add_bias(item['input'])
+
+    def add_bias(self, input_row):
+        input_row.insert(0, 1)
 
     def output_iter(self):
         return (item['output'] for item in self.training_data)
@@ -61,6 +64,7 @@ class LnrReg(object):
         return self.thetas
 
     def run(self, input_row):
+        self.add_bias(input_row)                  # add bias
         return self.calc_hypothesis(input_row)
 
     def gradient_descent(self):
