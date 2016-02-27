@@ -51,12 +51,12 @@ class NeuralNet(object):
         self.set_defaults()
 
     def set_defaults(self):         # defaults that can be overridden at runtime
+        self.reg_term = 1           #PH: reasonable?
         self.nodes = [[1, None, None], [1, None, None], [None]]
         self.sizes = [len(layer_nodes) for layer_nodes in self.nodes]
         self.output_size = self.sizes[-1]
         self.output_layer_i = len(self.nodes) - 1
         self.weights = [
-                        [None],                                 # l_input
                         [[30, -20, -20], [-10, 20, 20]],        # [NOT AND], [OR]
                         [[-30, 20, 20]]                         # [AND]
                        ]
@@ -77,34 +77,40 @@ class NeuralNet(object):
 
     def forward_prop(self):
         # skip the input layer
-        for layer_idx in xrange(1, self.output_layer_i + 1):
-            prev_layer_idx = layer_idx - 1
-            curr_layer_nodes = self.nodes[layer_idx]  #PH: need this?
+        for layer_i in xrange(0, self.output_layer_i):
+            curr_layer_nodes = self.nodes[layer_i]
+            next_layer_nodes = self.nodes[layer_i + 1]
 
-            # multiply prev layer's nodes by current weights
-            prev_layer_nodes = self.nodes[prev_layer_idx]
-            layer_weights = self.weights[layer_idx]
+            # multiply prev layer's nodes by next weights
+            layer_weights = self.weights[layer_i]
 
-            # skip assigning the bias unit from prev node, unless you're on the output layer -- there's no bias unit there.
-            start_curr_node_idx = (0 if layer_idx == self.output_layer_i else 1)
+            # skip calcing the bias unit on the curr node, unless you're on the output layer -- there's no bias unit there.
+            next_start_i = ( 0 if layer_i + 1 == self.output_layer_i
+                                      else 1 )
 
-            # fill in current layer nodes
-            for curr_node_idx in xrange(start_curr_node_idx, len(curr_layer_nodes)):
-                # optimize this later, but REM we don't keep any weights to calc the x_0 for the CURRENT layer. That's always 1.
-                weights_idx = curr_node_idx - 1
-                curr_node_weights = layer_weights[weights_idx]
-                node_val = sum( prev_node_val * weight
-                                for prev_node_val, weight
-                                in izip(prev_layer_nodes, curr_node_weights) )
+            # fill in next layer nodes
+            for next_node_i in xrange(next_start_i, len(next_layer_nodes)):
+                # optimize this later, but REM we don't keep any weights to calc the x_0 for the NEXT layer. That's always 1.
+                # also, ok if there's only 1 thing in weights.. weights[0] == weights[1]
+                weights_idx = next_node_i - 1
+                next_node_weights = layer_weights[weights_idx]
+                node_val = sum( curr_node_val * weight
+                                for curr_node_val, weight
+                                in izip(curr_layer_nodes, next_node_weights) )
 
-                curr_layer_nodes[curr_node_idx] = node_val
+                next_layer_nodes[next_node_i] = node_val
 
-            self.activate(layer_idx)
+            self.activate(layer_i + 1)
+            print self.nodes
 
-    def activate(self, layer_idx):
-        layer_nodes = self.nodes[layer_idx]
+    def activate(self, layer_i):
+        layer_nodes = self.nodes[layer_i]
         for i, node_val in enumerate(layer_nodes):
-            self.nodes[layer_idx][i] = utils.sigmoid(node_val)
+            # don't activate bias term, just leave as a 1. Unless you're on the output layer, then you will need to activate first term
+            # if layer_i == self.output_layer_i or i != 0:
+            if i == 0 and layer_i != self.output_layer_i:
+                continue
+            self.nodes[layer_i][i] = utils.sigmoid(node_val)
 
     def output_iter(self):
         return (item['output'] for item in self.training_data)
@@ -117,21 +123,23 @@ class NeuralNet(object):
     # REM the nodes don't have to be refreshed in between runs
     def calc_error(self):
         self.output_size
-        reg_term = self.calc_error_regularization_term()
+        reg_term = self.calc_error_regularization()
 
-    #PH:*** fix this. Need to exclude bias terms.
-    def calc_error_regularization_term(self):
-        # oops. short variable names to avoid newlines
-        layer_weights_iter = (lw for lw in self.weights)
-        curr_layer_idx_weights_iter = (clw for clw in layer_weights_iter)
-        weights_iter = (w ** 2 for w in curr_layer_idx_weights_iter)
+    def calc_error_regularization(self):
+        reg = 0
 
-        return sum(weights_iter)
+        for layer_weights in self.weights:
+            for curr_layer_weights in layer_weights:
+                for i, weight in enumerate(curr_layer_weights):
+                    if i != 0:
+                        reg += (weight ** 2)
+        return reg * self.reg_term / (2 * len(self.training_data))
 
 
 
 net = NeuralNet([[1, 0, 0], [0, 1, 1]])
-print net.run([0, 0])
+print net.run([1, 0])
+print net.calc_error_regularization()
 
 
 
@@ -145,13 +153,3 @@ Ie. in XOR...
 (NOT AND) AND (OR)
 NOT AND -->
 '''
-
-my_list = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-split_list = [[1, 2], 3]]
-
-
-layer_weights_iter = (lw for lw in weights)
-curr_layer_idx_weights_iter = (clw for clw in layer_weights_iter)
-weights_iter = (w ** 2 for w in curr_layer_idx_weights_iter)
-
-sum(weights_iter)
