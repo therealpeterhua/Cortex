@@ -188,12 +188,74 @@ class NeuralNet(object):
         return squared_err_sum / (2 * len(self.training_data))
 
 
-def run_input(input_row):
-    pass
+def add_bias(input_row):
+    input_row.insert(0, 1)
 
-def forward_propagate(thetas, nodes):
-    pass
+def run_input(input_row):
+    nodes = [[1, None, None], [1, None, None], [None]]
+
+    add_bias(input_row)
+    nodes[0] = input_row
+    output_layer_idx = len(nodes) - 1
+
+    weights = [
+                [None],                                 # l_input
+                [[30, -20, -20], [-10, 20, 20]],        # [NOT AND], [OR]
+                [[-30, 20, 20]]                         # [AND]
+              ]
+
+    forward_propagate(weights, nodes, output_layer_idx)
+    return nodes[output_layer_idx]
+
+def forward_propagate(weights, nodes, output_layer_idx):
+    # skip the input layer
+    for layer_idx in xrange(1, len(nodes)):
+        prev_layer_idx = layer_idx - 1
+        curr_layer_nodes = nodes[layer_idx]  #PH: need this?
+
+        # multiply prev layer's nodes by current weights
+        prev_layer_nodes = nodes[prev_layer_idx]
+        layer_weights = weights[layer_idx]
+
+        # skip assigning the bias unit from prev node, unless you're on the output layer -- there's no bias unit there.
+        start_curr_node_idx = (0 if layer_idx == output_layer_idx else 1)
+
+        # fill in current layer nodes
+        for curr_node_idx in xrange(start_curr_node_idx, len(curr_layer_nodes)):
+            # optimize this later, but REM we don't keep any weights to calc the x_0 for the CURRENT layer. That's always 1.
+            weights_idx = curr_node_idx - 1
+            curr_node_weights = layer_weights[weights_idx]
+            node_val = sum( prev_node_val * weight
+                            for prev_node_val, weight
+                            in izip(prev_layer_nodes, curr_node_weights) )
+
+            curr_layer_nodes[curr_node_idx] = node_val
+
+        activate(nodes, layer_idx)
+
+def activate(nodes, layer_idx):
+    layer_nodes = nodes[layer_idx]
+    for i, node_val in enumerate(layer_nodes):
+        nodes[layer_idx][i] = sigmoid(node_val)
+
+def sigmoid(val):
+    return 1 / (1 + e ** (-val))
 
 
 weights = []
-nodes = [[1, 0], []]
+nodes = [[0, 0], []]
+
+print run_input([0, 0])
+
+
+
+'''
+Top level of weights is level.
+Second level of weights is the weights for the node of the next layer.
+Third level are the individual weights to multiply the current node by.
+
+Ie. in XOR...
+
+(NOT AND) AND (OR)
+NOT AND -->
+'''
