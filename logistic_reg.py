@@ -1,6 +1,7 @@
 from pdb import set_trace
 from math import log, e
 from itertools import izip
+from utils import sigmoid
 
 from multi_linear_reg import LnrReg
 '''
@@ -18,11 +19,6 @@ from multi_linear_reg import LnrReg
 regression = LnrReg()
 
 class LogReg(LnrReg):
-
-    @staticmethod
-    def sigmoid(val):
-        return 1 / (1 + e ** (-val))
-
     def __init__(self, data = None):
         super(LogReg, self).__init__(data)
 
@@ -31,8 +27,7 @@ class LogReg(LnrReg):
 
     def calc_hypothesis(self, input_row):
         theta_trans_X = super(LogReg, self).calc_hypothesis(input_row)
-        result = LogReg.sigmoid(theta_trans_X)
-        return LogReg.sigmoid(theta_trans_X)
+        return sigmoid(theta_trans_X)
 
     def calc_error(self):
         return self.logistic_error()

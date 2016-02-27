@@ -1,4 +1,8 @@
+from math import e
 # The goal of this method is to raise informative errors where possible, ie. inconsistent data types or data lengths.
+def sigmoid(val):
+    return 1 / (1 + e ** (-val))
+
 def prevalidate(data):
     if not data:
         raise Exception("Can't use blank data.")
