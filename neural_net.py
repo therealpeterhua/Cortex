@@ -75,6 +75,7 @@ class NeuralNet(object):
         self.forward_prop()
         return self.nodes[self.output_layer_i]
 
+    #PH: extrapolate out some of these methods so you don't gotta worry about +1, -1, etc.
     def forward_prop(self):
         # skip the input layer
         for layer_i in xrange(0, self.output_layer_i):
