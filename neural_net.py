@@ -10,7 +10,6 @@ Pruning algo -- disregard nodes that receive low weights
 
 class NeuralNet(object):
 
-
     def suggested_hidden_layers():
         num_rows = len(self.training_data)
         # PH:*** build out more!
@@ -33,9 +32,6 @@ class NeuralNet(object):
         pass
 
 
-    # PH: below are lifted straight from linear regression
-
-
 class NeuralNet(object):
     @staticmethod
     def add_bias(input_row):
@@ -52,20 +48,59 @@ class NeuralNet(object):
 
     def set_defaults(self):         # defaults that can be overridden at runtime
         self.reg_term = 1           #PH: reasonable?
-        self.nodes = [[1, None, None], [1, None, None], [None]]
-        self.sizes = [len(layer_nodes) for layer_nodes in self.nodes]
-        self.output_size = self.sizes[-1]
-        self.output_layer_i = len(self.nodes) - 1
+
+        self.input_size = 2
+        self.input_size += 1        # add bias
+        self.output_size = 1        # read from training_data
+
+        #PH:*** have defaults, allow USER to SET hidden_sizes
+        self.hidden_sizes = [2]
+        # add biases
+        self.hidden_sizes = [size + 1 for size in self.hidden_sizes]
+        self.sizes = [self.input_size] + self.hidden_sizes + [self.output_size]
+
+        self.build_nodes()
         self.weights = [
                         [[30, -20, -20], [-10, 20, 20]],        # [NOT AND], [OR]
                         [[-30, 20, 20]]                         # [AND]
                        ]
+        self.errors = []
+        self.build_errors_matrix()
+
+        # On choosing epsilons for random initialization...
+        # One effective strategy for choosing epsilon is to base it on the number of units in the network. A good choice of is... LOOK UP
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.alpha = 0.01               # learn rate   PH:*** rename?
 
         # figure out right # hidden layer...
         # self.hidden_layer = max(2, self.suggested_hidden_layers())
+
+    def parse_and_set(inputs):
+        # set input_size, output_size, output_layer_i, sizes?
+        pass
+
+    def build_nodes(self):
+        self.nodes = [[None for i in xrange(size)] for size in self.sizes]
+        #PH:*** delete if not used again
+        self.output_layer_i = len(self.nodes) - 1
+        # set bias values in non-output layers
+        for layer_i in xrange(0, self.output_layer_i):
+            self.nodes[layer_i][0] = 1
+
+    def build_errors_matrix(self):
+        self.errors = utils.dupe_with_randos(self.weights)
+
+    def output_iter(self):
+        return (item['output'] for item in self.training_data)
+
+    def input_iter(self):
+        return (item['input'] for item in self.training_data)
+
+    def train(self):
+        training_iters = izip(self.input_iter(), self.output_iter())
+        for input_row, output_val in self.training_data:
+            pass        #PH:*** write this out! First, forward_prop, then backward...
 
     def run(self, input_row):
         NeuralNet.add_bias(input_row)
@@ -154,3 +189,9 @@ Ie. in XOR...
 (NOT AND) AND (OR)
 NOT AND -->
 '''
+
+
+weights = [
+                [[30, -20, -20], [-10, 20, 20]],        # [NOT AND], [OR]
+                [[-30, 20, 20]]                         # [AND]
+               ]

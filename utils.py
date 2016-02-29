@@ -1,8 +1,17 @@
 from math import e
-# The goal of this method is to raise informative errors where possible, ie. inconsistent data types or data lengths.
+from random import uniform
+
 def sigmoid(val):
     return 1 / (1 + e ** (-val))
 
+# assumes matrix of consistent nesting. recursively fills with random numbers
+def dupe_with_randos(matrix):
+    if type(matrix[0]) is list:
+        return [ dupe_with_randos(el) for el in matrix ]
+    else:
+        return [uniform(1, -1) for el in matrix]
+
+# The goal of this method is to raise informative errors where appropriate, ie. inconsistent data types or data lengths.
 def prevalidate(data):
     if not data:
         raise Exception("Can't use blank data.")
