@@ -1,6 +1,7 @@
 from pdb import set_trace
 from math import log
 from itertools import izip
+from random import uniform
 
 import utils
 
@@ -48,6 +49,7 @@ class NeuralNet(object):
 
     def set_defaults(self):         # defaults that can be overridden at runtime
         self.reg_term = 1           #PH: reasonable?
+        self.epsilon = 1       #PH: look at suggested here, or revisit
 
         self.input_size = 2
         self.input_size += 1        # add bias
@@ -60,8 +62,10 @@ class NeuralNet(object):
         self.sizes = [self.input_size] + self.hidden_sizes + [self.output_size]
 
         self.build_nodes()
+        self.build_weights()
+        set_trace()
         self.weights = [
-                        [[30, -20, -20], [-10, 20, 20]],        # [NOT AND], [OR]
+                        [[30, -20, -20], [-10, 20, 20]],       # [NOT AND], [OR]
                         [[-30, 20, 20]]                         # [AND]
                        ]
         self.errors = []
@@ -87,6 +91,14 @@ class NeuralNet(object):
         # set bias values in non-output layers
         for layer_i in xrange(0, self.output_layer_i):
             self.nodes[layer_i][0] = 1
+
+    def build_weights(self):
+        # For each layer, as many rows as there are nodes in the next layer. As many elements per row as there are nodes in current layer.
+        self.weights = [ [ [ #uniform(-self.epsilon, self.epsilon)
+                             1
+                             for node in xrange(curr_size) ]
+                           for node in xrange(self.sizes[i + 1]) ]
+                         for i, curr_size in enumerate(self.sizes[:-1]) ]
 
     def build_errors_matrix(self):
         self.errors = utils.dupe_with_randos(self.weights)
@@ -191,7 +203,11 @@ NOT AND -->
 '''
 
 
-weights = [
-                [[30, -20, -20], [-10, 20, 20]],        # [NOT AND], [OR]
-                [[-30, 20, 20]]                         # [AND]
-               ]
+
+from random import randrange
+from functools import partial
+
+def random(a, b):
+    return randrange(a, b)
+
+my_func = partial(random, -5, 5)

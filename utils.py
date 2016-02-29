@@ -4,7 +4,7 @@ from random import uniform
 def sigmoid(val):
     return 1 / (1 + e ** (-val))
 
-# assumes matrix of consistent nesting. recursively fills with random numbers
+# delete? assumes matrix of consistent nesting. recursively fills with random numbers
 def dupe_with_randos(matrix):
     if type(matrix[0]) is list:
         return [ dupe_with_randos(el) for el in matrix ]
