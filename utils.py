@@ -5,11 +5,11 @@ def sigmoid(val):
     return 1 / (1 + e ** (-val))
 
 # delete? assumes matrix of consistent nesting. recursively fills with random numbers
-def dupe_with_randos(matrix):
+def dupe_with_infs(matrix):
     if type(matrix[0]) is list:
-        return [ dupe_with_randos(el) for el in matrix ]
+        return [ dupe_with_infs(el) for el in matrix ]
     else:
-        return [uniform(1, -1) for el in matrix]
+        return [float('inf') for el in matrix]
 
 # The goal of this method is to raise informative errors where appropriate, ie. inconsistent data types or data lengths.
 def prevalidate(data):

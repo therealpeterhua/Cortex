@@ -74,19 +74,21 @@ class NeuralNet(object):
         self.sizes = [self.input_size] + self.hidden_sizes + [self.output_size]
 
         self.build_nodes()
-        self.build_weights()
+        self.weights = self.build_weights()
+        self.gradients = utils.dupe_with_infs(self.weights)
+        self.deltas = utils.dupe_with_infs(self.weights)
+
         self.weights = [
                         [[30, -20, -20], [-10, 20, 20]],       # [NOT AND], [OR]
                         [[-30, 20, 20]]                         # [AND]
                        ]
-        self.errors = []
-        self.build_errors_matrix()
 
         # On choosing epsilons for random initialization...
         # One effective strategy for choosing epsilon is to base it on the number of units in the network. A good choice of is... LOOK UP
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.alpha = 0.01               # learn rate   PH:*** rename?
+        self.max_iters = 50000
 
         # figure out right # hidden layer...
         # self.hidden_layer = max(2, self.suggested_hidden_layers())
@@ -105,27 +107,25 @@ class NeuralNet(object):
 
     def build_weights(self):
         # For each layer, as many rows as there are nodes in the next layer. As many elements per row as there are nodes in current layer.
-        self.weights = [ [ [ uniform(-self.epsilon, self.epsilon)
-                             for curr_node_i in xrange(curr_size) ]
+        weights = [ [ [ uniform(-self.epsilon, self.epsilon)
+                        for curr_node_i in xrange(curr_size) ]
                            #PH: maybe extrap out the size index picker?
                            # should only go to next sizes - 1 in next_node_i, because we don't use the current nodes to calculate BIAS unit of next layer, unless next layer is output!
-                           for next_node_i in xrange(self.sizes[i + 1] - 1) ]
-                         for i, curr_size in enumerate(self.sizes[:-2]) ]
+                      for next_node_i in xrange(self.sizes[i + 1] - 1) ]
+                    for i, curr_size in enumerate(self.sizes[:-2]) ]
 
         # For final output weights, we don't skip the bias unit in the next_node_i
         output_weights = [ [ uniform(-self.epsilon, self.epsilon)
                              for pre_output_node_i in xrange(self.sizes[-2]) ]
                            for output_node_i in xrange(self.sizes[-1]) ]
-        self.weights.append(output_weights)
-
-    def build_errors_matrix(self):
-        self.errors = utils.dupe_with_randos(self.weights)
+        weights.append(output_weights)
+        return weights
 
     def train(self):
         training_iters = izip(self.input_iter, self.output_iter)
         for input_row, output_row in training_iters:
             self.run(input_row)
-            self.back_prop()
+            self.back_prop(output_row)
 
     def run(self, input_row):
         NeuralNet.add_bias(input_row)
@@ -162,10 +162,50 @@ class NeuralNet(object):
             self.activate(layer_i + 1)
         # print 'After forward feed: %s' % self.nodes
 
-    def back_prop(self):
+    def back_prop(self, output_row):
+        # self.weights = [
+        #                 [[30, -20, -20], [-10, 20, 20]],     # [NOT AND], [OR]
+        #                 [[-30, 20, 20]]                      # [AND]
+        #                ]
+
+        # self.weights = [
+        #                 [[4, -2, -2], [-5, 2, 2]],     # [NOT AND], [OR]
+        #                 [[-4, 2, 2]],                      # [AND]
+        #                 [[1]]             # (not inserted...)
+        #                ]
+
         # REM you gotta go back forwards
-        for layer_i in self.nodes:
-            curr_layer_nodes = layer_i
+        last_delta = [ [predicted - actual]
+                       for predicted, actual
+                       in izip(self.output_nodes, output_row) ]
+
+        # NOTE: our thetas are laid out exactly like the vectorized version -- a sub-array is a layer, then a row. We drop the first el in the row (bias), just like we drop the first column in vectorized version
+
+        for curr_layer in xrange(len(self.deltas), 0, -1):
+            prev_layer = curr_layer - 1
+
+            if curr_layer == len(self.deltas):
+                curr_deltas = last_delta
+            else:
+                curr_deltas = self.deltas[curr_layer]
+
+            self.deltas[prev_layer] = self.calc_deltas(curr_deltas, prev_layer)
+
+        self.deltas[0] = None           # PH: don't care about inputs
+        set_trace()
+        self.calc_gradient()
+
+    #PH: ADD IN A SIGMOID DERIV
+    def calc_deltas(self, curr_deltas, prev_layer):
+        prev_weights = self.weights[prev_layer]
+
+        # dot-product -- check out idx reversal
+        return [ [ sum( curr_deltas[j][0] * weights[i]
+                   for j, weights in enumerate(prev_weights) ) ]
+                 for i in xrange(1, len(prev_weights[0])) ]
+
+    def calc_gradient(self):
+        pass
 
     def activate(self, layer_i):
         layer_nodes = self.nodes[layer_i]
@@ -218,8 +258,13 @@ net = NeuralNet([
 ])
 
 print net.run([1, 0])
-print net.calc_error_regularization()
-print net.calc_error()
+print net.run([0, 1])
+print net.run([1, 1])
+print net.run([0, 0])
+# print net.calc_error_regularization()
+# print net.calc_error()
+
+net.train()
 
 
 
@@ -264,11 +309,6 @@ NOT AND -->
 # NOTE: the first weights will be (4 - 1) x 3, the second (5 - 1) x 4, etc.
 # ^ This will be the size of the matrices
 
-for i in xrange(0, 10, -1):
-    print i
-
-for i in xrange(0, 10):
-    print i
 
 from random import randrange
 from functools import partial
@@ -277,3 +317,21 @@ def random(a, b):
     return randrange(a, b)
 
 my_func = partial(random, -5, 5)
+
+
+
+def calc_deltas(curr_deltas, prev_weights):
+    prev_deltas = []
+    # more list comps here? Or break it out?
+    for i in xrange(1, len(prev_weights[0])):    # could do with self.sizes?
+        total = sum( curr_deltas[j][0] * weights[i]
+                     for j, weights in enumerate(prev_weights) )
+        prev_deltas.append([total])
+
+    return prev_deltas
+
+
+curr_deltas = [[2], [1]]
+prev_weights = [[1, 2, 3, 4], [4, 3, 2, 1]]
+
+print calc_deltas(curr_deltas, prev_weights)

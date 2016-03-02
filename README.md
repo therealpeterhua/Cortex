@@ -10,3 +10,9 @@ Bold driver heuristic adjusts learning rate on the fly through a momentum factor
 The regularization factor addresses overfit by squashing higher-order features with great prejudice, but be wary of setting its value too high. Regularization exhibits the same (though disproportionally smaller) "compression" effect on lower-order weights, tending the system towards 0.
 
 Vectorized implementations have been implemented in Octave, and will be ported over to NumPy eventually. In the meantime, please enjoy some for loops and list comprehensions.
+
+
+TODOs:
+- Implement neural network momentum scaling
+- Regularization in logistic and linear regression
+- More extensive error handling -- empty layers for NN, edge-case inputs
