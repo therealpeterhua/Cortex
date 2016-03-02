@@ -15,6 +15,14 @@ class LnrReg(object):
         if data is not None:
             self.load_training_data(data)
 
+    @property
+    def output_iter(self):
+        return (item['output'] for item in self.training_data)
+
+    @property
+    def input_iter(self):
+        return (item['input'] for item in self.training_data)
+
     def load_training_data(self, data):
         utils.prevalidate(data)
         self.training_data = utils.standardize(data)
@@ -51,12 +59,6 @@ class LnrReg(object):
 
     def add_bias(self, input_row):
         input_row.insert(0, 1)
-
-    def output_iter(self):
-        return (item['output'] for item in self.training_data)
-
-    def input_iter(self):
-        return (item['input'] for item in self.training_data)
 
     def train(self, options = None):          #PH:*** set options...
         self.gradient_descent()
@@ -104,7 +106,7 @@ class LnrReg(object):
         for j, theta in enumerate(self.thetas):
             sigma = 0
 
-            zipped_data_iters = izip(self.input_iter(), self.output_iter())
+            zipped_data_iters = izip(self.input_iter, self.output_iter)
             for i, (input_row, output) in enumerate(zipped_data_iters):
                 actual_val = output
                 predicted_val = self.calc_hypothesis(input_row)
@@ -134,7 +136,7 @@ class LnrReg(object):
 
     def avg_mse(self):
         squared_err_sum = 0
-        zipped_data_iters = izip(self.input_iter(), self.output_iter())
+        zipped_data_iters = izip(self.input_iter, self.output_iter)
 
         for i, (input_row, output_val) in enumerate(zipped_data_iters):
             actual_val = output_val

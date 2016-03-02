@@ -39,13 +39,26 @@ class NeuralNet(object):
         if data is not None:
             self.load_training_data(data)
 
+    #PH:*** worth zipping these up always?
+    @property
+    def input_iter(self):
+        return (item['input'] for item in self.training_data)
+
+    @property
+    def output_iter(self):
+        return (item['output'] for item in self.training_data)
+
+    @property
+    def output_nodes(self):
+        return self.nodes[-1]
+
     def load_training_data(self, data):
         utils.prevalidate(data)
         self.training_data = utils.standardize(data)
         self.set_defaults()
 
     def set_defaults(self):         # defaults that can be overridden at runtime
-        self.reg_rate = 1           #PH: reasonable?
+        self.reg_rate = 0.1           #PH: reasonable?
         self.epsilon = 1       #PH: look at suggested here, or revisit
 
         self.data_size = len(self.training_data)        #PH: confusing naming?
@@ -108,25 +121,18 @@ class NeuralNet(object):
     def build_errors_matrix(self):
         self.errors = utils.dupe_with_randos(self.weights)
 
-    def output_iter(self):
-        return (item['output'] for item in self.training_data)
-
-    def input_iter(self):
-        return (item['input'] for item in self.training_data)
-
     def train(self):
-        training_iters = izip(self.input_iter(), self.output_iter())
-        for input_row, output_val in self.training_data:
+        training_iters = izip(self.input_iter, self.output_iter)
+        for input_row, output_row in training_iters:
             self.run(input_row)
             self.back_prop()
 
     def run(self, input_row):
         NeuralNet.add_bias(input_row)
         self.nodes[0] = input_row
-        self.output_layer_i = len(self.nodes) - 1
 
         self.feed_forward()
-        return self.nodes[self.output_layer_i]
+        return self.output_nodes
 
     #PH: extrapolate out some of these methods so you don't gotta worry about +1, -1, etc.
     def feed_forward(self):
@@ -139,8 +145,7 @@ class NeuralNet(object):
             layer_weights = self.weights[layer_i]
 
             # skip calcing the bias unit on the curr node, unless you're on the output layer -- there's no bias unit there.
-            next_start_i = ( 0 if layer_i + 1 == self.output_layer_i
-                                      else 1 )
+            next_start_i = ( 0 if layer_i + 1 == self.output_layer_i else 1 )
 
             # fill in next layer nodes
             for next_node_i in xrange(next_start_i, len(next_layer_nodes)):
@@ -155,10 +160,12 @@ class NeuralNet(object):
                 next_layer_nodes[next_node_i] = node_val
 
             self.activate(layer_i + 1)
-            print self.nodes
+        # print 'After forward feed: %s' % self.nodes
 
     def back_prop(self):
-        pass
+        # REM you gotta go back forwards
+        for layer_i in self.nodes:
+            curr_layer_nodes = layer_i
 
     def activate(self, layer_i):
         layer_nodes = self.nodes[layer_i]
@@ -173,8 +180,23 @@ class NeuralNet(object):
     # Really, you need to do this one as you're looping through and calculating the output. In a neural net, the network itself IS the hypothesis Fn... remember that calc_error is the only place we ever call the hypothesis Fn from? Well, you're gonna need to do that now with the network... probably.
     # REM the nodes don't have to be refreshed in between runs
     def calc_error(self):
-        self.output_size
+        total_error = 0
+        training_iters = izip(self.input_iter, self.output_iter)
+
+        #PH:*** my regularization terms are way too strong!! Giving 300 error with the CORRECT answer, holy crap. I need it to reach to 0 with
+        for input_row, output_row in training_iters:
+            self.run(input_row)             # fill nodes with the current input_row
+            #PH: probably want to yield into this from the main function? So avoid running all the inputs twice, once for gradient descent and again for error calc
+
+            total_error += sum(
+                -actual * log(predicted) - (1 - actual) * log(1 - predicted)
+                for predicted, actual
+                in izip(self.output_nodes, output_row)
+            )
+
         reg_term = self.calc_error_regularization()
+
+        return total_error / self.data_size + reg_term
 
     def calc_error_regularization(self):
         all_weights_iter = (
@@ -188,9 +210,16 @@ class NeuralNet(object):
         return sum(all_weights_iter) * self.reg_rate / (2 * self.data_size)
 
 
-net = NeuralNet([[1, 0, 0], [0, 1, 1]])
+net = NeuralNet([
+    {'input': [1, 0], 'output': [1]},
+    {'input': [0, 1], 'output': [1]},
+    {'input': [0, 0], 'output': [0]},
+    {'input': [1, 1], 'output': [0]},
+])
+
 print net.run([1, 0])
 print net.calc_error_regularization()
+print net.calc_error()
 
 
 
@@ -234,6 +263,12 @@ NOT AND -->
 # self.sizes = [3, 4, 5, 2]
 # NOTE: the first weights will be (4 - 1) x 3, the second (5 - 1) x 4, etc.
 # ^ This will be the size of the matrices
+
+for i in xrange(0, 10, -1):
+    print i
+
+for i in xrange(0, 10):
+    print i
 
 from random import randrange
 from functools import partial

@@ -34,7 +34,7 @@ class LogReg(LnrReg):
 
     def logistic_error(self):
         total_error = 0
-        zipped_data_iters = izip(self.input_iter(), self.output_iter())
+        zipped_data_iters = izip(self.input_iter, self.output_iter)
 
         for input_row, output_val in zipped_data_iters:
             predicted_output = self.calc_hypothesis(input_row)
