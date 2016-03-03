@@ -35,17 +35,17 @@ def fill_dot_product(aye, bee, fill_in = None):
             if fill_in is None:
                 curr_result_row.append(val)
             else:
-                result[i][j] = val
+                result[i][j] += val
 
     return result
 
-# PH: tests, take out
-fill_in = [[None, None], [None, None], [None, None]]
-print fill_dot_product([[3], [2], [1]], [[2, 3]], fill_in)
-
-aye = [[2, 3, 4], [5, 6, 7]]
-bee = [[4, 7], [5, 8], [6, 9]]
-print fill_dot_product(aye, bee)
+# # PH: tests, take out
+# fill_in = [[None, None], [None, None], [None, None]]
+# print fill_dot_product([[3], [2], [1]], [[2, 3]], fill_in)
+#
+# aye = [[2, 3, 4], [5, 6, 7]]
+# bee = [[4, 7], [5, 8], [6, 9]]
+# print fill_dot_product(aye, bee)
 
 
 # The goal of this method is to raise informative errors where appropriate, ie. inconsistent data types or data lengths.

@@ -30,6 +30,10 @@ class NeuralNet(object):
         return (item['output'] for item in self.training_data)
 
     @property
+    def training_iter(self):
+        return izip(self.input_iter, self.output_iter)
+
+    @property
     def output_nodes(self):
         return self.nodes[-1]
 
@@ -55,23 +59,21 @@ class NeuralNet(object):
         self.sizes = [self.input_size] + self.hidden_sizes + [self.output_size]
 
         self.build_nodes()
+        print self.nodes
         self.weights = self.build_weights()
         self.gradients = utils.dupe_with_infs(self.weights)
 
         # structure same as nodes, without bias
         self.deltas = utils.dupe_with_infs(self.nodes)
 
-        # self.weights = [
-        #                 [[30, -20, -20], [-10, 20, 20]],       # [NOT AND], [OR]
-        #                 [[-30, 20, 20]]                         # [AND]
-        #                ]
+        self.weights = [[[0.36483230176638926, -0.10354547213358176, -0.7980308463608701], [0.9237207276836605, -0.21646020063063934, -0.23030769700312906]], [[0.6545288228362074, 0.9406124797474309, 0.08076250834392552]]]
 
         # On choosing epsilons for random initialization...
         # One effective strategy for choosing epsilon is to base it on the number of units in the network. A good choice of is... LOOK UP
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.learn_rate = 0.01               # learn rate   PH:*** rename?
-        self.max_iters = 200                 # change
+        self.max_iters = 25                 # change
 
         # figure out right # hidden layer...
         # self.hidden_layer = max(2, self.suggested_hidden_layers())
@@ -81,6 +83,7 @@ class NeuralNet(object):
         pass
 
     def build_nodes(self):
+        print 'building_nodes********'
         self.nodes = [[None for i in xrange(size)] for size in self.sizes]
         #PH:*** delete if not used again
         self.output_layer_i = len(self.nodes) - 1
@@ -105,15 +108,19 @@ class NeuralNet(object):
         return weights
 
     def train(self):
-        training_iter = izip(self.input_iter, self.output_iter)
-
         iters = 0
-
         #PH:*** add more logic here
         while iters < self.max_iters:
-            for input_row, output_row in training_iter:
-                self.reset_errors_and_deltas()
+            self.reset_gradients()          #PH:*** don't do this for every row!
+
+            for input_row, output_row in self.training_iter:
+                self.reset_deltas()
+                print 'before: %s' % self.nodes
+
+                #PH:*** fix this. we're always padding. only pad user input -- training input, loop through and add the bias term.
+                #PH:******* also a bug
                 self.run(input_row)
+                print 'after: %s' % self.nodes
                 self.back_prop(output_row)      #PH:*** you'll need to accum errors here somehow. can't just back_prop line by line...
 
             self.postprocess_gradients()
@@ -123,13 +130,20 @@ class NeuralNet(object):
 
     def log_things(self):
         new_error = self.calc_error()
+        print 'Nodes: %s' % self.nodes
         print 'New error: %s' % new_error
         print 'Weights: %s' % self.weights
+        print 'Gradients: %s' % self.gradients
+        print 'Deltas: %s' % self.deltas
         print '\n\n'
 
-    def reset_errors_and_deltas(self):
+    def reset_gradients(self):
         #PH: fix this. duping don't make sense. how about fill_with_zeros instead?
         self.gradients = utils.dupe_with_zeros(self.gradients)
+
+    def reset_deltas(self):
+        #PH: fix this. duping don't make sense. how about fill_with_zeros instead?
+        #PH: is it RIGHT to always reset deltas on EVERY ROW? think so...
         self.deltas = utils.dupe_with_zeros(self.deltas)
 
     def run(self, input_row):
@@ -169,10 +183,11 @@ class NeuralNet(object):
 
     def back_prop(self, output_row):
         self.set_deltas(output_row)
-        self.accumulate_errors(output_row)
+        self.accumulate_gradient(output_row)
 
-    def accumulate_errors(self, output_row):
+    def accumulate_gradient(self, output_row):
         # REM: self.weights is exactly as formularized -- the first weight does indeed connect the first and second layers, and so on. len(self.weights) would be the output layer!
+
         for layer_i in xrange(self.output_layer_i, 0, -1):
             prev_layer_i = layer_i - 1
 
@@ -180,11 +195,19 @@ class NeuralNet(object):
             prev_gradients = self.gradients[prev_layer_i]
             prev_nodes = self.nodes[prev_layer_i]
 
+            # print 'delta rows %s columns %s' % (len(self.deltas), len(self.))
+
+            # if prev_layer_i == 0:
+            #     set_trace()
+
             self.fill_dot_product(curr_deltas, prev_nodes, prev_gradients)
 
-    def fill_dot_product(self, curr_deltas, prev_nodes, prev_gradients):
+    def fill_dot_product(self, curr_deltas, prev_nodes, prev_gradients): #tested
         for i, delta_row in enumerate(curr_deltas):
             for j, node_val in enumerate(prev_nodes):
+                # print 'i, j is %s' % i, j
+                # if (i, j) == (0, 3):
+                #     set_trace()
                 prev_gradients[i][j] += delta_row[0] * prev_nodes[j]
 
     def set_deltas(self, output_row):
@@ -250,10 +273,9 @@ class NeuralNet(object):
     # REM the nodes don't have to be refreshed in between runs
     def calc_error(self):
         total_error = 0
-        training_iter = izip(self.input_iter, self.output_iter)
 
         #PH:*** my regularization terms are way too strong!! Giving 300 error with the CORRECT answer, holy crap. I need it to reach to 0 with
-        for input_row, output_row in training_iter:
+        for input_row, output_row in self.training_iter:
             self.run(input_row)             # fill nodes with the current input_row
             #PH: probably want to yield into this from the main function? So avoid running all the inputs twice, once for gradient descent and again for error calc
 
@@ -286,7 +308,7 @@ net = NeuralNet([
     {'input': [1, 1], 'output': [0]},
 ])
 
-print "Before training ......."
+print 'Before training .......'
 print net.run([1, 0])
 print net.run([0, 1])
 print net.run([1, 1])
@@ -294,7 +316,7 @@ print net.run([0, 0])
 
 net.train()
 
-print "After training ......."
+print 'After training .......'
 print net.run([1, 0])
 print net.run([0, 1])
 print net.run([1, 1])
@@ -310,6 +332,12 @@ Ie. in XOR...
 
 (NOT AND) AND (OR)
 NOT AND -->
+
+        # self.weights = [
+        #                 [[30, -20, -20], [-10, 20, 20]],       # [NOT AND], [OR]
+        #                 [[-30, 20, 20]]                         # [AND]
+        #                ]
+
 '''
 
 # PH: Non-list-comp setting own weights
