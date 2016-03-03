@@ -43,6 +43,7 @@ class NeuralNet(object):
         self.set_defaults()
 
     def set_defaults(self):         # defaults that can be overridden at runtime
+        self.add_training_bias()
         self.reg_rate = 0.0
         self.epsilon = 1       #PH: look at suggested here, or revisit
 
@@ -66,24 +67,28 @@ class NeuralNet(object):
         # structure same as nodes, without bias
         self.deltas = utils.dupe_with_infs(self.nodes)
 
+        #PH:*** delete this...
         self.weights = [[[0.36483230176638926, -0.10354547213358176, -0.7980308463608701], [0.9237207276836605, -0.21646020063063934, -0.23030769700312906]], [[0.6545288228362074, 0.9406124797474309, 0.08076250834392552]]]
 
         # On choosing epsilons for random initialization...
         # One effective strategy for choosing epsilon is to base it on the number of units in the network. A good choice of is... LOOK UP
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
-        self.learn_rate = 0.01               # learn rate   PH:*** rename?
-        self.max_iters = 25                 # change
+        self.learn_rate = 0.1               # learn rate   PH:*** rename?
+        self.max_iters = 100                 # change
 
         # figure out right # hidden layer...
         # self.hidden_layer = max(2, self.suggested_hidden_layers())
+
+    def add_training_bias(self):
+        for input_row in self.input_iter:
+            NeuralNet.add_bias(input_row)
 
     def parse_and_set(self, inputs):
         # set input_size, output_size, output_layer_i, sizes?
         pass
 
     def build_nodes(self):
-        print 'building_nodes********'
         self.nodes = [[None for i in xrange(size)] for size in self.sizes]
         #PH:*** delete if not used again
         self.output_layer_i = len(self.nodes) - 1
@@ -115,12 +120,8 @@ class NeuralNet(object):
 
             for input_row, output_row in self.training_iter:
                 self.reset_deltas()
-                print 'before: %s' % self.nodes
 
-                #PH:*** fix this. we're always padding. only pad user input -- training input, loop through and add the bias term.
-                #PH:******* also a bug
-                self.run(input_row)
-                print 'after: %s' % self.nodes
+                self.feed_forward(input_row)
                 self.back_prop(output_row)      #PH:*** you'll need to accum errors here somehow. can't just back_prop line by line...
 
             self.postprocess_gradients()
@@ -146,17 +147,18 @@ class NeuralNet(object):
         #PH: is it RIGHT to always reset deltas on EVERY ROW? think so...
         self.deltas = utils.dupe_with_zeros(self.deltas)
 
-    def run(self, input_row):
-        NeuralNet.add_bias(input_row)
-        self.nodes[0] = input_row
+    def run(self, user_given_input_row):
+        NeuralNet.add_bias(user_given_input_row)
 
-        self.feed_forward()
+        self.feed_forward(user_given_input_row)
         return self.output_nodes
 
     #PH: extrapolate out some of these methods so you don't gotta worry about +1, -1, etc.
-    def feed_forward(self):
+    def feed_forward(self, input_row):
+        self.nodes[0] = input_row
+
         # skip the input layer
-        for layer_i in xrange(0, self.output_layer_i):
+        for layer_i in xrange(self.output_layer_i):
             curr_layer_nodes = self.nodes[layer_i]
             next_layer_nodes = self.nodes[layer_i + 1]
 
@@ -276,7 +278,7 @@ class NeuralNet(object):
 
         #PH:*** my regularization terms are way too strong!! Giving 300 error with the CORRECT answer, holy crap. I need it to reach to 0 with
         for input_row, output_row in self.training_iter:
-            self.run(input_row)             # fill nodes with the current input_row
+            self.feed_forward(input_row)             # fill nodes with the current input_row
             #PH: probably want to yield into this from the main function? So avoid running all the inputs twice, once for gradient descent and again for error calc
 
             total_error += sum(
@@ -322,6 +324,9 @@ print net.run([0, 1])
 print net.run([1, 1])
 print net.run([0, 0])
 
+
+
+#PH:*** DELETE all this stuff down here
 
 '''
 Top level of weights is level.
