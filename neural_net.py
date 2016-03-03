@@ -182,22 +182,17 @@ class NeuralNet(object):
         for layer_i in xrange(self.output_layer_i, 0, -1):
             prev_layer_i = layer_i - 1
 
-            curr_delta = self.deltas[layer_i]
+            curr_deltas = self.deltas[layer_i]
             prev_errors = self.errors[prev_layer_i]
             prev_nodes = self.nodes[prev_layer_i]
 
-            self.fill_dot_product(curr_delta, [prev_nodes], prev_errors)
-
+            self.fill_dot_product(curr_deltas, prev_nodes, prev_errors)
         set_trace()
 
-    def fill_dot_product(self, delta, nodes, errors):
-        for i, delta_row in enumerate(delta):
-            for j, _ in enumerate(nodes[0]):
-                col_iter = (node_row[j] for node_row in nodes)
-                val = sum( row_val * col_val
-                           for row_val, col_val
-                           in izip(delta_row, col_iter) )
-                errors[i][j] += val
+    def fill_dot_product(self, deltas, nodes, errors):
+        for i, delta_row in enumerate(deltas):
+            for j, node_val in enumerate(nodes):
+                errors[i][j] += delta_row[0] * nodes[j]
 
     def set_deltas(self, output_row):
         self.deltas[-1] = [ [predicted - actual]
