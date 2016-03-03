@@ -1,8 +1,15 @@
 from math import e
 from random import uniform
+from itertools import izip
 
 def sigmoid(val):
     return 1 / (1 + e ** (-val))
+
+def dupe_with_zeros(matrix):
+    if type(matrix[0]) is list:
+        return [ dupe_with_zeros(el) for el in matrix ]
+    else:
+        return [0 for el in matrix]
 
 # delete? assumes matrix of consistent nesting. recursively fills with random numbers
 def dupe_with_infs(matrix):
@@ -10,6 +17,36 @@ def dupe_with_infs(matrix):
         return [ dupe_with_infs(el) for el in matrix ]
     else:
         return [float('inf') for el in matrix]
+
+# returns the dot product of 2 matrices, filling in a result matrix if given
+def fill_dot_product(aye, bee, fill_in = None):
+    result = ( [] if fill_in is None else fill_in )
+
+    for i, aye_row in enumerate(aye):
+        if fill_in is None:
+            result.append([])
+            curr_result_row = result[i]
+
+        for j, _ in enumerate(bee[0]):
+            col_iter = (bee_row[j] for bee_row in bee)
+            val = sum( row_val * col_val
+                       for row_val, col_val
+                       in izip(aye_row, col_iter) )
+            if fill_in is None:
+                curr_result_row.append(val)
+            else:
+                result[i][j] = val
+
+    return result
+
+# PH: tests, take out
+fill_in = [[None, None], [None, None], [None, None]]
+print fill_dot_product([[3], [2], [1]], [[2, 3]], fill_in)
+
+aye = [[2, 3, 4], [5, 6, 7]]
+bee = [[4, 7], [5, 8], [6, 9]]
+print fill_dot_product(aye, bee)
+
 
 # The goal of this method is to raise informative errors where appropriate, ie. inconsistent data types or data lengths.
 def prevalidate(data):

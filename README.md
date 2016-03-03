@@ -1,7 +1,7 @@
 CONGRATS YOU'VE FOUND ME!
 
 This library implements 3 popular prediction / classification techniques.
-Specifically, it implements a neural network, and logistic and linear regression.
+Specifically, it implements a neural network, and logistic and linear regression, using no external libraries.
 
 Performs batch gradient descent across all techniques, and employs sigmoid activation for the NN and logistic reg.
 
@@ -13,6 +13,7 @@ Vectorized implementations have been implemented in Octave, and will be ported o
 
 
 TODOs:
+- Serialization of weights, allowing user to save and resume work on large data sets
 - Implement neural network momentum scaling
 - Regularization in logistic and linear regression
 - More extensive error handling -- empty layers for NN, edge-case inputs

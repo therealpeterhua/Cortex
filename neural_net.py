@@ -9,26 +9,7 @@ import utils
 Pruning algo -- disregard nodes that receive low weights
 '''
 
-class NeuralNet(object):
-
-    def suggested_hidden_layers():
-        num_rows = len(self.training_data)
-        # PH:*** build out more!
-        # HOW TO CHOOSE NUMBER OF NODES?
-        #http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
-
-    def set_weights(nested_matrices):       #PH:*** used only for testing.. lol
-        self.weights = nested_matrices
-
-    def build_weights():
-        pass
-
-    def train():
-        pass
-
-    def activate():
-        pass
-
+#http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
 
 class NeuralNet(object):
     @staticmethod
@@ -76,7 +57,10 @@ class NeuralNet(object):
         self.build_nodes()
         self.weights = self.build_weights()
         self.gradients = utils.dupe_with_infs(self.weights)
-        self.deltas = utils.dupe_with_infs(self.weights)
+        self.errors = utils.dupe_with_infs(self.weights)
+
+        # structure same as nodes, without bias
+        self.deltas = utils.dupe_with_infs(self.nodes)
 
         self.weights = [
                         [[30, -20, -20], [-10, 20, 20]],       # [NOT AND], [OR]
@@ -87,7 +71,7 @@ class NeuralNet(object):
         # One effective strategy for choosing epsilon is to base it on the number of units in the network. A good choice of is... LOOK UP
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
-        self.alpha = 0.01               # learn rate   PH:*** rename?
+        self.learn_rate = 0.01               # learn rate   PH:*** rename?
         self.max_iters = 50000
 
         # figure out right # hidden layer...
@@ -122,10 +106,26 @@ class NeuralNet(object):
         return weights
 
     def train(self):
-        training_iters = izip(self.input_iter, self.output_iter)
-        for input_row, output_row in training_iters:
-            self.run(input_row)
-            self.back_prop(output_row)
+        training_iter = izip(self.input_iter, self.output_iter)
+
+        iters = 0
+        repeat = True       #PH: change this
+
+        while repeat:
+            repeat = False
+            for input_row, output_row in training_iter:
+                self.reset_errors_and_deltas()
+                self.run(input_row)
+                self.back_prop(output_row)      #PH:*** you'll need to accum errors here somehow. can't just back_prop line by line...
+
+            iters += 1
+
+            self.find_new_thetas()          #PH:*** calc here, and test
+
+    def reset_errors_and_deltas(self):
+        #PH: fix this. duping don't make the most sense
+        self.errors = utils.dupe_with_zeros(self.errors)
+        self.deltas = utils.dupe_with_zeros(self.deltas)
 
     def run(self, input_row):
         NeuralNet.add_bias(input_row)
@@ -174,14 +174,38 @@ class NeuralNet(object):
         #                 [[1]]             # (not inserted...)
         #                ]
 
-        # REM you gotta go back forwards
-        last_delta = [ [predicted - actual]
-                       for predicted, actual
-                       in izip(self.output_nodes, output_row) ]
+        self.set_deltas(output_row)
+        self.add_to_errors(output_row)
+
+    def add_to_errors(self, output_row):
+        # REM: self.weights is exactly as formularized -- the first weight does indeed connect the first and second layers, and so on. len(self.weights) would be the output layer!
+        for layer_i in xrange(self.output_layer_i, 0, -1):
+            prev_layer_i = layer_i - 1
+
+            curr_delta = self.deltas[layer_i]
+            prev_errors = self.errors[prev_layer_i]
+            prev_nodes = self.nodes[prev_layer_i]
+
+            self.fill_dot_product(curr_delta, [prev_nodes], prev_errors)
+
+        set_trace()
+
+    def fill_dot_product(self, delta, nodes, errors):
+        for i, delta_row in enumerate(delta):
+            for j, _ in enumerate(nodes[0]):
+                col_iter = (node_row[j] for node_row in nodes)
+                val = sum( row_val * col_val
+                           for row_val, col_val
+                           in izip(delta_row, col_iter) )
+                errors[i][j] += val
+
+    def set_deltas(self, output_row):
+        self.deltas[-1] = [ [predicted - actual]
+                            for predicted, actual
+                            in izip(self.output_nodes, output_row) ]
 
         # NOTE: our thetas are laid out exactly like the vectorized version -- a sub-array is a layer, then a row. We drop the first el in the row (bias), just like we drop the first column in vectorized version
-
-        for curr_layer in xrange(len(self.deltas), 0, -1):
+        for curr_layer in xrange(len(self.deltas) - 1, 0, -1):
             prev_layer = curr_layer - 1
 
             if curr_layer == len(self.deltas):
@@ -192,17 +216,25 @@ class NeuralNet(object):
             self.deltas[prev_layer] = self.calc_deltas(curr_deltas, prev_layer)
 
         self.deltas[0] = None           # PH: don't care about inputs
-        set_trace()
-        self.calc_gradient()
 
-    #PH: ADD IN A SIGMOID DERIV
     def calc_deltas(self, curr_deltas, prev_layer):
         prev_weights = self.weights[prev_layer]
 
-        # dot-product -- check out idx reversal
-        return [ [ sum( curr_deltas[j][0] * weights[i]
-                   for j, weights in enumerate(prev_weights) ) ]
-                 for i in xrange(1, len(prev_weights[0])) ]
+        # REM: curr_deltas is a column vector, of form [[5], [1], [3], [-1]]
+        return (         # dot-product - check out idx reversal, on prev_weights
+            [ [ sum(curr_deltas[j][0] * weights[i] * self.squeeze(prev_layer, i)
+                for j, weights in enumerate(prev_weights) ) ]
+              for i in xrange(1, len(prev_weights[0])) ]
+        )
+
+    # FIX FUNCTION ORDER!
+    def find_new_thetas(self):
+        # adjust each node within Deltas to be scaled by # of thetas, add regularization
+        pass
+
+    def squeeze(self, layer, node_i):
+        val = utils.sigmoid(self.nodes[layer][node_i])
+        return val * (1 - val)
 
     def calc_gradient(self):
         pass
@@ -210,8 +242,7 @@ class NeuralNet(object):
     def activate(self, layer_i):
         layer_nodes = self.nodes[layer_i]
         for i, node_val in enumerate(layer_nodes):
-            # don't activate bias term, just leave as a 1. Unless you're on the output layer, then you will need to activate first term
-            # if layer_i == self.output_layer_i or i != 0:
+            # skip bias node of all but output layer (leave others as 1)
             if i == 0 and layer_i != self.output_layer_i:
                 continue
             self.nodes[layer_i][i] = utils.sigmoid(node_val)
@@ -221,10 +252,10 @@ class NeuralNet(object):
     # REM the nodes don't have to be refreshed in between runs
     def calc_error(self):
         total_error = 0
-        training_iters = izip(self.input_iter, self.output_iter)
+        training_iter = izip(self.input_iter, self.output_iter)
 
         #PH:*** my regularization terms are way too strong!! Giving 300 error with the CORRECT answer, holy crap. I need it to reach to 0 with
-        for input_row, output_row in training_iters:
+        for input_row, output_row in training_iter:
             self.run(input_row)             # fill nodes with the current input_row
             #PH: probably want to yield into this from the main function? So avoid running all the inputs twice, once for gradient descent and again for error calc
 
