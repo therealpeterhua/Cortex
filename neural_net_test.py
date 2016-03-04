@@ -44,7 +44,7 @@ class NeuralNet(object):
 
     def set_defaults(self):         # defaults that can be overridden at runtime
         self.add_training_bias()
-        self.reg_rate = 1
+        self.reg_rate = 0.1
         self.epsilon = 1       #PH: look at suggested here, or revisit
 
         self.data_size = len(self.training_data)        #PH: confusing naming?
@@ -61,6 +61,8 @@ class NeuralNet(object):
 
         self.build_nodes()
         self.weights = self.build_weights()
+        self.weights = [ [[1, 3, 5], [-2, 3, -1]],
+                         [[1.5, 2, -4]] ]
         self.gradients = utils.dupe_with_infs(self.weights)
 
         # structure same as nodes, without bias
@@ -74,7 +76,7 @@ class NeuralNet(object):
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.learn_rate = 0.1               # learn rate   PH:*** rename?
-        self.max_iters = 10000                 # change
+        self.max_iters = 2                 # PH: change
 
         # figure out right # hidden layer...
         # self.hidden_layer = max(2, self.suggested_hidden_layers())
@@ -124,21 +126,22 @@ class NeuralNet(object):
                 self.reset_deltas()
 
                 self.feed_forward(input_row)
-                self.back_prop(output_row)      #PH:*** you'll need to accum errors here somehow. can't just back_prop line by line...
+                self.back_prop(output_row)
 
             self.postprocess_gradients()
+            print 'gradients %s' % self.gradients
             self.set_new_weights()          #PH:*** calc here, and test
             iters += 1
             self.log_things()
 
     def log_things(self):
         new_error = self.calc_error()
-        print 'Nodes: %s' % self.nodes
-        print 'New error: %s' % new_error
-        print 'Weights: %s' % self.weights
-        print 'Gradients: %s' % self.gradients
-        print 'Deltas: %s' % self.deltas
-        print '\n\n'
+        # print 'Nodes: %s' % self.nodes
+        # print 'New error: %s' % new_error
+        # print 'Weights: %s' % self.weights
+        # print 'Gradients: %s' % self.gradients
+        # print 'Deltas: %s' % self.deltas
+        # print '\n\n'
 
     def reset_gradients(self):
         #PH: fix this. duping don't make sense. how about fill_with_zeros instead?
@@ -185,6 +188,7 @@ class NeuralNet(object):
             self.activate(layer_i + 1)
         # print 'After forward feed: %s' % self.nodes
 
+    #PH: move closer to train() function in positioning O_O
     def back_prop(self, output_row):
         self.set_deltas(output_row)
         self.accumulate_gradient(output_row)
@@ -322,7 +326,7 @@ class NeuralNet(object):
 '''
 
 net = NeuralNet([
-    {'input': [3, 5], 'output': [1]}
+    {'input': [1, 0], 'output': [1]}
 ])
 
 net.set_weights([
@@ -330,10 +334,20 @@ net.set_weights([
     [[1.5, 2, -4]]
 ])
 
-net.feed_forward([1, 3, 5])
+net.train()
 
-print net.nodes
-print net.calc_error()
+# net.feed_forward([1, 1, 0])
+#
+# print "net.nodes: %s" % net.nodes
+# print "net.calc_error(): %s" % net.calc_error()
+#
+# net.set_deltas([1])
+# print "net.deltas: %s" % net.deltas
+#
+# net.reset_gradients()
+# net.accumulate_gradient([1])
+# net.postprocess_gradients()
+# print "net.gradients: %s" % net.gradients
 
 
 '''

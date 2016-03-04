@@ -1,4 +1,4 @@
-X = [3, 5]
+X = [1, 0]
 y = [1]
 
 Theta1 = [1, 3, 5; -2, 3, -1]
@@ -8,7 +8,7 @@ Theta2 = [1.5, 2, -4]
 
 m = size(X, 1);
 num_labels = size(Theta2, 1);
-lambda = 1      %PH:*** change later, if you wanna test
+lambda = 0.1      %PH:*** change later, if you wanna test
 
 % You need to return the following variables correctly
 J = 0;
@@ -79,6 +79,9 @@ size(sigmoidGradient(z2));      % 5000 x 25
 % d2 and z2 same size, nice!
 d2 = (d3 * shortened_theta2) .* sigmoidGradient(z2);    % d2 is 5000 x 25
 
+d3
+d2
+
 Delta1 = d2' * a1;      % 25 x 401
 
 Delta2 = d3' * a2;      % 10 x 26
@@ -93,3 +96,6 @@ Delta2_reg_term = (lambda / m) .* Theta2_non_bias;
 
 Theta1_grad = Delta1 ./ m + Delta1_reg_term;
 Theta2_grad = Delta2 ./ m + Delta2_reg_term;
+
+Theta1_grad
+Theta2_grad
