@@ -61,8 +61,9 @@ class NeuralNet(object):
 
         self.build_nodes()
         self.weights = self.build_weights()
-        self.weights = [ [[1, 3, 5], [-2, 3, -1]],
-                         [[1.5, 2, -4]] ]
+        # self.weights = [ [[1, 3, 5], [-2, 3, -1]],
+        #                  [[1.5, 2, -4]] ]
+        self.weights = [[[0.8647455857465699, 0.17581308569973933, -0.8582788392245729], [-0.7299604631858434, 0.8494939087137555, 0.9719484737755888]], [[0.3169746186886007, -0.9110837624163778, 0.6480662961076894]]]
         self.gradients = utils.dupe_with_infs(self.weights)
 
         # structure same as nodes, without bias
@@ -75,8 +76,8 @@ class NeuralNet(object):
         # One effective strategy for choosing epsilon is to base it on the number of units in the network. A good choice of is... LOOK UP
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
-        self.learn_rate = 0.1               # learn rate   PH:*** rename?
-        self.max_iters = 2                 # PH: change
+        self.learn_rate = 0.05               # learn rate   PH:*** rename?
+        self.max_iters = 5                 # PH: change
 
         # figure out right # hidden layer...
         # self.hidden_layer = max(2, self.suggested_hidden_layers())
@@ -129,19 +130,18 @@ class NeuralNet(object):
                 self.back_prop(output_row)
 
             self.postprocess_gradients()
-            print 'gradients %s' % self.gradients
             self.set_new_weights()          #PH:*** calc here, and test
             iters += 1
             self.log_things()
 
     def log_things(self):
         new_error = self.calc_error()
-        # print 'Nodes: %s' % self.nodes
-        # print 'New error: %s' % new_error
-        # print 'Weights: %s' % self.weights
-        # print 'Gradients: %s' % self.gradients
-        # print 'Deltas: %s' % self.deltas
-        # print '\n\n'
+        print 'Nodes: %s' % self.nodes
+        print 'New error: %s' % new_error
+        print 'Weights: %s' % self.weights
+        print 'Gradients: %s' % self.gradients
+        print 'Deltas: %s' % self.deltas
+        print '\n\n'
 
     def reset_gradients(self):
         #PH: fix this. duping don't make sense. how about fill_with_zeros instead?
@@ -331,12 +331,17 @@ net = NeuralNet([
     {'input': [0, 0], 'output': [0]}
 ])
 
-net.set_weights([
-    [[1, 3, 5], [-2, 3, -1]],
-    [[1.5, 2, -4]]
-])
+# net.set_weights([
+#     [[1, 3, 5], [-2, 3, -1]],
+#     [[1.5, 2, -4]]
+# ])
 
 net.train()
+
+print net.run([1, 0])
+print net.run([0, 1])
+print net.run([1, 1])
+print net.run([0, 0])
 
 # net.feed_forward([1, 1, 0])
 #
