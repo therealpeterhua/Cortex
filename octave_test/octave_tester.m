@@ -1,5 +1,5 @@
-X = [1, 0]
-y = [1]
+X = [1, 0; 0, 1; 1, 1; 0, 0]
+y = [1; 1; 0; 0]
 
 Theta1 = [1, 3, 5; -2, 3, -1]
 
@@ -8,7 +8,7 @@ Theta2 = [1.5, 2, -4]
 
 m = size(X, 1);
 num_labels = size(Theta2, 1);
-lambda = 0.1      %PH:*** change later, if you wanna test
+lambda = 0     %PH:*** change later, if you wanna test
 
 % You need to return the following variables correctly
 J = 0;
@@ -30,7 +30,8 @@ second_layer = sigmoid([ones(m, 1) X] * Theta1');
 predicted_y = sigmoid([ones(m, 1) second_layer] * Theta2');
 
 % we need to convert actual y into a matrix, not a vector, so we can compare it vs. our 10-vector neural net output (the inner loop on the cost function)
-y_matrix = eye(num_labels)(y,:);
+% y_matrix = eye(num_labels)(y,:);
+y_matrix = y;       % here, y is what we're looking for, so...
 
 errors = -y_matrix .* log(predicted_y) - (1 - y_matrix) .* log(1 - predicted_y);
 J = sum(sum(errors)) * (1 / m);     % 1 sum sums cols, need to sum whole thing
