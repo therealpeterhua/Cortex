@@ -149,7 +149,6 @@ class NeuralNet(object):
 
     def reset_deltas(self):
         #PH: fix this. duping don't make sense. how about fill_with_zeros instead?
-        #PH: is it RIGHT to always reset deltas on EVERY ROW? think so...
         self.deltas = utils.dupe_with_zeros(self.deltas)
 
     def run(self, user_given_input_row):
