@@ -44,7 +44,7 @@ class NeuralNet(object):
 
     def set_defaults(self):         # defaults that can be overridden at runtime
         self.add_training_bias()
-        self.reg_rate = 0.0
+        self.reg_rate = 1
         self.epsilon = 1       #PH: look at suggested here, or revisit
 
         self.data_size = len(self.training_data)        #PH: confusing naming?
@@ -60,7 +60,6 @@ class NeuralNet(object):
         self.sizes = [self.input_size] + self.hidden_sizes + [self.output_size]
 
         self.build_nodes()
-        print self.nodes
         self.weights = self.build_weights()
         self.gradients = utils.dupe_with_infs(self.weights)
 
@@ -75,7 +74,7 @@ class NeuralNet(object):
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.learn_rate = 0.1               # learn rate   PH:*** rename?
-        self.max_iters = 100                 # change
+        self.max_iters = 10000                 # change
 
         # figure out right # hidden layer...
         # self.hidden_layer = max(2, self.suggested_hidden_layers())
@@ -111,6 +110,9 @@ class NeuralNet(object):
                            for output_node_i in xrange(self.sizes[-1]) ]
         weights.append(output_weights)
         return weights
+
+    def set_weights(self, weights):
+        self.weights = weights
 
     def train(self):
         iters = 0
@@ -303,12 +305,45 @@ class NeuralNet(object):
 
         return sum(all_weights_iter) * self.reg_rate / (2 * self.data_size)
 
+# PH:*** Conclusion from tests -- our normal training iterations perform the EXACT same function as a no-hidden-layer logistic regression. Frickin hell bro. Are we not running separate gradient descents on each intermediate delta?
+
+# PH:*** REM: Try to go through 1 round of iteration with 1 or 2 row(s) of training data -- match each number!
+
+# PH:*** BUILD YOUR THETAS MANUALLY, THEN UNIT TEST VERSUS OCTAVE
+#   ie. run your delta code -- does it make sense? is backprop giving consistent results?
+
+# PH:*** UNIT
+
+'''
+1) Start with a row, just testing feed_forward, error, gradient calc
+4) Change lambda term!
+2) Transition row to XOR function
+3) Add more rows, from XOR
+'''
+
+net = NeuralNet([
+    {'input': [3, 5], 'output': [1]}
+])
+
+net.set_weights([
+    [[1, 3, 5], [-2, 3, -1]],
+    [[1.5, 2, -4]]
+])
+
+net.feed_forward([1, 3, 5])
+
+print net.nodes
+print net.calc_error()
+
+
+'''
+OLD TESTS...
 
 net = NeuralNet([
     {'input': [1, 0], 'output': [1]},
     {'input': [0, 1], 'output': [1]},
     {'input': [0, 0], 'output': [0]},
-    {'input': [1, 1], 'output': [0]},
+    {'input': [1, 1], 'output': [1]},
 ])
 
 print 'Before training .......'
@@ -324,81 +359,4 @@ print net.run([1, 0])
 print net.run([0, 1])
 print net.run([1, 1])
 print net.run([0, 0])
-
-
-
-#PH:*** DELETE all this stuff down here
-
 '''
-Top level of weights is level.
-Second level of weights is the weights for the node of the next layer.
-Third level are the individual weights to multiply the current node by.
-
-Ie. in XOR...
-
-(NOT AND) AND (OR)
-NOT AND -->
-
-        # self.weights = [
-        #                 [[30, -20, -20], [-10, 20, 20]],       # [NOT AND], [OR]
-        #                 [[-30, 20, 20]]                         # [AND]
-        #                ]
-
-'''
-
-# PH: Non-list-comp setting own weights
-# self.other_weights = []
-# for i, curr_size in enumerate(self.sizes[:-1]):
-#     self.other_weights.append([])
-#     level_2 = self.other_weights[i]
-#
-#     # -1 bc don't use curr nodes to calculate bias unit of next nodes
-#     for next_node_i in xrange(self.sizes[i + 1] - 1):
-#         level_2.append([])
-#         level_3 = level_2[next_node_i]
-#
-#         for curr_node_i in xrange(curr_size):
-#             level_3.append(1)
-
-# PH: Non-list-comp regularization
-# def calc_error_regularization(self):
-#     reg = 0
-#
-#     for layer_weights in self.weights:
-#         for curr_layer_weights in layer_weights:
-#             for i, weight in enumerate(curr_layer_weights):
-#                 if i != 0:
-#                     reg += (weight ** 2)
-#     return reg * self.reg_rate / (2 * self.data_size)
-
-# For weights node sizes ....
-# self.sizes = [3, 4, 5, 2]
-# NOTE: the first weights will be (4 - 1) x 3, the second (5 - 1) x 4, etc.
-# ^ This will be the size of the matrices
-
-
-from random import randrange
-from functools import partial
-
-def random(a, b):
-    return randrange(a, b)
-
-my_func = partial(random, -5, 5)
-
-
-
-def calc_deltas(curr_deltas, prev_weights):
-    prev_deltas = []
-    # more list comps here? Or break it out?
-    for i in xrange(1, len(prev_weights[0])):    # could do with self.sizes?
-        total = sum( curr_deltas[j][0] * weights[i]
-                     for j, weights in enumerate(prev_weights) )
-        prev_deltas.append([total])
-
-    return prev_deltas
-
-
-curr_deltas = [[2], [1]]
-prev_weights = [[1, 2, 3, 4], [4, 3, 2, 1]]
-
-print calc_deltas(curr_deltas, prev_weights)

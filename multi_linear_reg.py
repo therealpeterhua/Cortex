@@ -13,7 +13,7 @@ class LnrReg(object):
 
     def __init__(self, data = None):
         if data is not None:
-            self.load_training_data(data)
+            self.load_data(data)
 
     @property
     def output_iter(self):
@@ -23,7 +23,7 @@ class LnrReg(object):
     def input_iter(self):
         return (item['input'] for item in self.training_data)
 
-    def load_training_data(self, data):
+    def load_data(self, data):
         utils.prevalidate(data)
         self.training_data = utils.standardize(data)
         self.set_defaults()
