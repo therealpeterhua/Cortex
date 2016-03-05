@@ -18,6 +18,8 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 - Finish readme -- each section needs its own. ANN first.
 - Humanize all variable names. No thetas & alphas.
 
+* Hidden_sizes needs to be user inputted, along with other options.
+
 '''
 
 #http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
@@ -66,10 +68,9 @@ class NeuralNet(object):
         self.input_size += 1        # add bias
         self.output_size = 1        # read from training_data
 
-        #PH:*** have defaults, allow USER to SET hidden_sizes
-        self.hidden_sizes = [4]
-        # add biases
-        self.hidden_sizes = [size + 1 for size in self.hidden_sizes]
+        #PH:*** unbiased_hiddens = `user_submission` or self.recommended()
+        unbiased_hiddens = self.recommended_hidden_sizes()
+        self.hidden_sizes = [size + 1 for size in unbiased_hiddens]
         self.sizes = [self.input_size] + self.hidden_sizes + [self.output_size]
 
         self.build_nodes()
@@ -80,19 +81,16 @@ class NeuralNet(object):
         # structure same as nodes, without bias
         self.deltas = utils.dupe_with_infs(self.nodes)
 
-        # On choosing epsilons for random initialization...
-        # One effective strategy for choosing epsilon is to base it on the number of units in the network. A good choice of is... LOOK UP
-
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.learn_rate = 0.05               # learn rate   PH:*** rename?
         self.max_iters = 10000                 # PH: change
 
-        # figure out right # hidden layer...
-        # self.hidden_layer = max(2, self.suggested_hidden_layers())
-
     def add_training_bias(self):
         for input_row in self.input_iter:
             NeuralNet.add_bias(input_row)
+
+    def recommended_hidden_sizes(self):
+        return [ max(4, 1 + abs(self.input_size - self.output_size) / 2) ]
 
     def parse_and_set(self, inputs):
         # set input_size, output_size, output_layer_i, sizes?
@@ -136,9 +134,6 @@ class NeuralNet(object):
                     epsilon = 0.15
                     next_i_weights.append()
 
-    def set_weights(self, weights):
-        self.weights = weights
-
     def train(self):
         iters = 0
         #PH:*** add more logic here
@@ -159,7 +154,7 @@ class NeuralNet(object):
     def log_things(self):
         new_error = self.calc_error()
         print 'Nodes: %s' % self.nodes
-        print 'New error: %s' % new_error
+        # print 'New error: %s' % new_error
         print 'Weights: %s' % self.weights
         print 'Gradients: %s' % self.gradients
         print 'Deltas: %s' % self.deltas
@@ -277,7 +272,7 @@ class NeuralNet(object):
             for i, next_i_gradients in enumerate(layer_gradients):
                 for j, gradient in enumerate(next_i_gradients):
                     gradient_val = gradient / self.data_size
-                    if j:       # j != 0
+                    if j != 0:
                         gradient_val += self.reg_rate * self.weights[l][i][j]
                     next_i_gradients[j] = gradient_val
 
@@ -340,13 +335,6 @@ class NeuralNet(object):
 
 # PH:*** UNIT
 
-'''
-1) Start with a row, just testing feed_forward, error, gradient calc
-4) Change lambda term!
-2) Transition row to XOR function
-3) Add more rows, from XOR
-'''
-
 net = NeuralNet([
     {'input': [1, 0], 'output': [1]},
     {'input': [0, 1], 'output': [1]},
@@ -354,53 +342,9 @@ net = NeuralNet([
     {'input': [0, 0], 'output': [0]}
 ])
 
-# net.set_weights([
-#     [[1, 3, 5], [-2, 3, -1]],
-#     [[1.5, 2, -4]]
-# ])
-
 net.train()
 
 print net.run([1, 0])
 print net.run([0, 1])
 print net.run([1, 1])
 print net.run([0, 0])
-
-# net.feed_forward([1, 1, 0])
-#
-# print "net.nodes: %s" % net.nodes
-# print "net.calc_error(): %s" % net.calc_error()
-#
-# net.set_deltas([1])
-# print "net.deltas: %s" % net.deltas
-#
-# net.reset_gradients()
-# net.accumulate_gradient([1])
-# net.postprocess_gradients()
-# print "net.gradients: %s" % net.gradients
-
-
-'''
-OLD TESTS...
-
-net = NeuralNet([
-    {'input': [1, 0], 'output': [1]},
-    {'input': [0, 1], 'output': [1]},
-    {'input': [0, 0], 'output': [0]},
-    {'input': [1, 1], 'output': [1]},
-])
-
-print 'Before training .......'
-print net.run([1, 0])
-print net.run([0, 1])
-print net.run([1, 1])
-print net.run([0, 0])
-
-net.train()
-
-print 'After training .......'
-print net.run([1, 0])
-print net.run([0, 1])
-print net.run([1, 1])
-print net.run([0, 0])
-'''
