@@ -31,7 +31,11 @@ net.train(options)
 net.run([0, 1])     # 0.979
 ```
 
-NOTE: In rare cases, your neural nets may return *less accurate* results than expected. If you find this to be the case, try training the network again. Gradient descent can hang on local minima, but each training call will randomize the initialization weights.
+<sup>NOTE: Occasionally, your neural nets may return *less accurate* results than anticipated. If so, try training the network again. Batch descent is sensitive to initial conditions and can hang on local minima, but each training call will randomize the initialization weights.</sup>
+
+The lower the learning rate and higher the desired degree of accuracy, the longer the training time, and the greater the chance of overfit. Network training time is a function of the learning rate and desired degree of accuracy.
+
+ELABORATE MORE. Learning rate is dynamic? Or should recommend lowering the degree of accuracy?
 
 
 TODOs:

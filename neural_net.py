@@ -17,8 +17,11 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 
 - Finish readme -- each section needs its own. ANN first.
 - Humanize all variable names. No thetas & alphas.
+- Wrap all these in a callable format. `lib`, etc.
 
 * Hidden_sizes needs to be user inputted, along with other options.
+* Print initialization conditions (number of hidden nodes, etc.), and the final error and such.
+* Remove Octave tests.
 
 '''
 
@@ -82,7 +85,9 @@ class NeuralNet(object):
         self.deltas = utils.dupe_with_infs(self.nodes)
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
-        self.learn_rate = 0.05               # learn rate   PH:*** rename?
+        self.learn_rate = 0.25
+        self.error_threshold = 0.05
+        self.total_error = float('inf')
         self.max_iters = 10000                 # PH: change
 
     def add_training_bias(self):
@@ -137,7 +142,8 @@ class NeuralNet(object):
     def train(self):
         iters = 0
         #PH:*** add more logic here
-        while iters < self.max_iters:
+        while ( iters < self.max_iters and
+                self.total_error > self.error_threshold):
             self.reset_gradients()          #PH:*** don't do this for every row!
 
             for input_row, output_row in self.training_iter:
@@ -154,7 +160,7 @@ class NeuralNet(object):
     def log_things(self):
         new_error = self.calc_error()
         print 'Nodes: %s' % self.nodes
-        # print 'New error: %s' % new_error
+        print 'New error: %s' % new_error
         print 'Weights: %s' % self.weights
         print 'Gradients: %s' % self.gradients
         print 'Deltas: %s' % self.deltas
@@ -174,7 +180,7 @@ class NeuralNet(object):
         self.feed_forward(user_given_input_row)
         return self.output_nodes
 
-    #PH: extrapolate out some of these methods so you don't gotta worry about +1, -1, etc.
+    #PH: reroute these loops, or use islice, so you don't gotta worry about +1, -1, etc.
     def feed_forward(self, input_row):
         self.nodes[0] = input_row
 
@@ -219,19 +225,11 @@ class NeuralNet(object):
             prev_gradients = self.gradients[prev_layer_i]
             prev_nodes = self.nodes[prev_layer_i]
 
-            # print 'delta rows %s columns %s' % (len(self.deltas), len(self.))
-
-            # if prev_layer_i == 0:
-            #     set_trace()
-
             self.fill_gradients(curr_deltas, prev_nodes, prev_gradients)
 
     def fill_gradients(self, curr_deltas, prev_nodes, prev_gradients): #tested
         for i, delta_row in enumerate(curr_deltas):
             for j, node_val in enumerate(prev_nodes):
-                # print 'i, j is %s' % i, j
-                # if (i, j) == (0, 3):
-                #     set_trace()
                 prev_gradients[i][j] += delta_row[0] * prev_nodes[j]
 
     def set_deltas(self, output_row):
@@ -275,6 +273,8 @@ class NeuralNet(object):
                     if j != 0:
                         gradient_val += self.reg_rate * self.weights[l][i][j]
                     next_i_gradients[j] = gradient_val
+
+        self.total_error = self.calc_error()
 
     # FIX FUNCTION ORDER!
     def set_new_weights(self):
@@ -326,14 +326,6 @@ class NeuralNet(object):
 
         return sum(all_weights_iter) * self.reg_rate / (2 * self.data_size)
 
-# PH:*** Conclusion from tests -- our normal training iterations perform the EXACT same function as a no-hidden-layer logistic regression. Frickin hell bro. Are we not running separate gradient descents on each intermediate delta?
-
-# PH:*** REM: Try to go through 1 round of iteration with 1 or 2 row(s) of training data -- match each number!
-
-# PH:*** BUILD YOUR THETAS MANUALLY, THEN UNIT TEST VERSUS OCTAVE
-#   ie. run your delta code -- does it make sense? is backprop giving consistent results?
-
-# PH:*** UNIT
 
 net = NeuralNet([
     {'input': [1, 0], 'output': [1]},
