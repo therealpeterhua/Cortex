@@ -15,7 +15,6 @@ g = zeros(size(z));
 
 sigmoid_result = 1.0 ./ (1.0 + exp(-z));
 
-%PH:*** this is what Heather Arthur does with the errors!
 g = sigmoid_result .* (1 - sigmoid_result);
 
 

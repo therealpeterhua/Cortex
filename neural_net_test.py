@@ -6,7 +6,18 @@ from random import uniform
 import utils
 
 '''
-Pruning algo -- disregard nodes that receive low weights
+NOTES ON XOR BATCH ANN GRADIENT DESCENT
+1) Low epsilon (0.15) tends all weights toward 0.5
+2) Having more nodes in hidden layer increases chance of accurate training. Bigger brainz
+
+- Follow rest of notes (set logistic and linear regression to take [0], [1] for outputs)
+- Implement error threshold for neural nets, and "convergence" theta-change threshold for logistic and linear regression
+- Set intelligent defaults for node_size, # hidden layers, etc.
+- Use intelligent epsilons!
+
+- Finish readme -- each section needs its own. ANN first.
+- Humanize all variable names. No thetas & alphas.
+
 '''
 
 #http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
@@ -44,8 +55,10 @@ class NeuralNet(object):
 
     def set_defaults(self):         # defaults that can be overridden at runtime
         self.add_training_bias()
-        self.reg_rate = 0
-        self.epsilon = 1       #PH: look at suggested here, or revisit
+        self.reg_rate = 0.0000
+        self.epsilon = 2       #PH: look at suggested here, or revisit
+
+        self.momentum = 1.1
 
         self.data_size = len(self.training_data)        #PH: confusing naming?
 
@@ -54,30 +67,25 @@ class NeuralNet(object):
         self.output_size = 1        # read from training_data
 
         #PH:*** have defaults, allow USER to SET hidden_sizes
-        self.hidden_sizes = [2]
+        self.hidden_sizes = [4]
         # add biases
         self.hidden_sizes = [size + 1 for size in self.hidden_sizes]
         self.sizes = [self.input_size] + self.hidden_sizes + [self.output_size]
 
         self.build_nodes()
         self.weights = self.build_weights()
-        # self.weights = [ [[1, 3, 5], [-2, 3, -1]],
-        #                  [[1.5, 2, -4]] ]
-        self.weights = [[[0.8647455857465699, 0.17581308569973933, -0.8582788392245729], [-0.7299604631858434, 0.8494939087137555, 0.9719484737755888]], [[0.3169746186886007, -0.9110837624163778, 0.6480662961076894]]]
+
         self.gradients = utils.dupe_with_infs(self.weights)
 
         # structure same as nodes, without bias
         self.deltas = utils.dupe_with_infs(self.nodes)
-
-        #PH:*** delete this...
-        # self.weights = [[[0.36483230176638926, -0.10354547213358176, -0.7980308463608701], [0.9237207276836605, -0.21646020063063934, -0.23030769700312906]], [[0.6545288228362074, 0.9406124797474309, 0.08076250834392552]]]
 
         # On choosing epsilons for random initialization...
         # One effective strategy for choosing epsilon is to base it on the number of units in the network. A good choice of is... LOOK UP
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.learn_rate = 0.05               # learn rate   PH:*** rename?
-        self.max_iters = 5                 # PH: change
+        self.max_iters = 10000                 # PH: change
 
         # figure out right # hidden layer...
         # self.hidden_layer = max(2, self.suggested_hidden_layers())
@@ -114,6 +122,20 @@ class NeuralNet(object):
         weights.append(output_weights)
         return weights
 
+    def build_weights_suggested(self):
+        self.weights = []
+        for i, curr_size in enumerate(self.sizes[:-2]):
+            self.weights.append([])
+            layer_weights = self.weights[i]
+
+            for next_node_i in xrange(self.sizes[i + 1] - 1):
+                layer_weights.append([])
+                next_i_weights = layer_weights[next_node_i]
+
+                for curr_node_i in xrange(curr_size):
+                    epsilon = 0.15
+                    next_i_weights.append()
+
     def set_weights(self, weights):
         self.weights = weights
 
@@ -132,7 +154,7 @@ class NeuralNet(object):
             self.postprocess_gradients()
             self.set_new_weights()          #PH:*** calc here, and test
             iters += 1
-            self.log_things()
+            # self.log_things()
 
     def log_things(self):
         new_error = self.calc_error()
@@ -266,7 +288,8 @@ class NeuralNet(object):
             for i, next_i_weights in enumerate(layer_weights):
                 for j, weight in enumerate(next_i_weights):
                     gradient_val = self.gradients[l][i][j]
-                    next_i_weights[j] = weight - self.learn_rate * gradient_val
+                    change = self.momentum * self.learn_rate * gradient_val
+                    next_i_weights[j] = weight - change
 
     def activate(self, layer_i):
         layer_nodes = self.nodes[layer_i]

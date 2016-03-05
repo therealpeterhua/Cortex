@@ -12,6 +12,8 @@ class LnrReg(object):
     MAX_ALLOWED_OUTPUT = 1
 
     def __init__(self, data = None):
+        # PH:*** TAKE OPTIONS OF PARAMETERS, ALONG WITH DATA
+        # decompose in the load_data, or elsewhere, with the fn(**args)
         if data is not None:
             self.load_data(data)
 
@@ -175,3 +177,6 @@ class LnrReg(object):
 #
 # test_reg = LnrReg(test_data_non_vectors)
 # test_reg.train()
+
+def test_fn(a, b, c):
+    pass

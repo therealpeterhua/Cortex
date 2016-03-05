@@ -12,7 +12,30 @@ Regularization factor addresses overfit by squashing higher-order features with 
 Vectorized implementations have been implemented in Octave, and will be ported over to NumPy eventually. In the meantime, please enjoy some for loops and list comprehensions.
 
 
+Training the XOR function...
+
+```python
+data = [
+    {'input': [1, 0], 'output': [1]},
+    {'input': [0, 1], 'output': [1]},
+    {'input': [0, 0], 'output': [0]},
+    {'input': [1, 1], 'output': [1]},
+]
+
+options = {'momentum': 1.1, 'log': True}
+
+net = NeuralNet()
+net.load_data(data)
+net.train(options)
+
+net.run([0, 1])     # 0.979
+```
+
+NOTE: In rare cases, your neural nets may return *less accurate* results than expected. If you find this to be the case, try training the network again. Gradient descent can hang on local minima, but each training call will randomize the initialization weights.
+
+
 TODOs:
+- Pruning algo for neural network to "trim" redundant nodes
 - Serialization of weights, allowing user to save and resume work on large data sets
 - Implement neural network momentum scaling
 - Regularization in logistic and linear regression
