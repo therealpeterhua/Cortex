@@ -20,6 +20,7 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 - Wrap all these in a callable format. `lib`, etc.
 
 * Hidden_sizes needs to be user inputted, along with other options.
+* Add in suggested epsilons per layer -- isn't there a simple number for this?
 * Print initialization conditions (number of hidden nodes, etc.).
 * Underscore the attributes you don't wish the user to set
 * Get rid of momentum altogether?
