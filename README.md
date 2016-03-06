@@ -45,38 +45,40 @@ Each element of the output vector must be between 0 and 1. Trains multi-class sc
 
 
 ###Linear Regression
-#####Example: Training y = x + 14 function...
+#####Example: Training y = 4x - 7 function...
 ```python
 data = [
-    {'input': [1, 0], 'output': [1]},
-    {'input': [0, 1], 'output': [1]},
-    {'input': [0, 0], 'output': [0]},
-    {'input': [1, 1], 'output': [1]},
+  {'input': [4], 'output': [9]},      # [4, 0]   would also work
+  {'input': [2.5], 'output': [3]},    # [2.5, 3] would also work
+  {'input': [7], 'output': [21]},
+  {'input': [-2], 'output': [-15]},
 ]
 
 options = {'momentum': 1.1, 'log_progress': True}
 
-net = NeuralNet()
-net.load_data(data)
-net.train(options)
+regression = LnrReg()
+regression.load_data(data)
+regression.train(options)
 
-net.run([0, 1])     # 0.979
+regression.run([10])        # 31.97
 ```
 
 #####Restrictions:
-Only supports output of 1 element. Does handle
+Only supports output of 1 element. Handles row vectors where last element is the output (`[x1, x2, y]`) as well as the `{'input': [x1, x2], 'output': [y]}` format used in our neural net.
 
 ######Adjustable model parameters(`options` dict in example)
   - `convergence_threshold`: Instead of using an error_threshold like in neural nets, linear regression uses a convergence_threshold.
   - `max_iters`: Same concept as in neural net (default 50000).
   - `learn_rate`: Same concept as neural net (default 0.01). You shouldn't need to adjust this if you leave momentum on.
   - `increase_momentum`: Boolean value determining whether to dynamically scale learning algo (default True). Strongly recommended you keep this on. If you leave it off, you'll have to adjust the learn_rate manually.
+  - `log_progress`: Same as in neural net (default False).
+  - `log_interval`: Same as in neural net (default 2000).
 
 
 ###Logistic Regression
 
 #####Restrictions:
-Only supports output of 1 element, of the value between 0 and 1. Will support multi-class in the future.
+Only supports output of 1 element, of the value between 0 and 1. Will support multi-class in the future. Also supports both `[x1, x2, y]` and `{'input': [x1, x2], 'output': [y]}` formats.
 
 ######Adjustable model parameters (these can be set similar to above)
 Same API as linear regression, hallelujah.

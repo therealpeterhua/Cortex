@@ -3,9 +3,6 @@ from itertools import izip
 
 import utils as ut
 
-'''
-This actually works for python 2... only relevant differences are `zip` --> itertools.izip and object inheritance on class declaration?
-'''
 
 class LnrReg(object):
     def __init__(self, data = None):
@@ -143,37 +140,3 @@ class LnrReg(object):
             squared_err_sum += (predicted_val - actual_val) ** 2
 
         return squared_err_sum / (2 * len(self.training_data))
-
-
-# test_data = [
-#     {'input': [1, 1], 'output': 1},
-#     {'input': [2, 2], 'output': 2},
-#     {'input': [3, 3], 'output': 3}
-# ]
-#
-# test_data_non_vectors = [
-#     [1, 1, 1],
-#     [2, 2, 2],
-#     [3, 3, 3]
-# ]
-
-
-# # 13962 iterations
-# # 13963 iterations
-# # 4465 iterations after...
-# test_data_non_vectors = [
-#     [4, 0],
-#     [5, 4],
-#     [6, 8],
-#     [7, 12],
-#     [8, 16],
-#     [9, 20],
-#     [10, 24]
-# ]
-#
-#
-# test_reg = LnrReg(test_data_non_vectors)
-# test_reg.train()
-
-def test_fn(a, b, c):
-    pass

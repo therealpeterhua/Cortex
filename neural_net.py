@@ -43,7 +43,6 @@ class NeuralNet(object):
         if data is not None:
             self.load_data(data)
 
-    #PH:*** worth zipping these up always?
     @property
     def input_iter(self):
         return (item['input'] for item in self.training_data)
@@ -151,7 +150,6 @@ class NeuralNet(object):
 
     def train(self):
         iters = 0
-        #PH:*** add more logic here
         while ( iters < self.max_iters and
                 self.total_error > self.error_threshold):
             self.reset_gradients()          #PH:*** don't do this for every row!
@@ -170,6 +168,7 @@ class NeuralNet(object):
 
     def log_things(self):
         new_error = self.calc_error()
+        #PH:*** really need all these?
         print 'Nodes: %s' % self.nodes
         print 'New error: %s' % new_error
         print 'Weights: %s' % self.weights

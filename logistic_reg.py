@@ -4,19 +4,6 @@ from itertools import izip
 from utils import sigmoid
 
 from multi_linear_reg import LnrReg
-'''
-
-1) Inherit from linear reg
-2) Change cost function, not mse
-3) Wrap hypo in sigmoid
-4) Convert to Python 2?
-5) Have a way to actually GET THE PREDICTION!!
-6) Create a way to serialize work done so for -- all you need are the thetas
-7) Add regularization to logistic regression -- else thetas can get huge
-
-'''
-
-regression = LnrReg()
 
 class LogReg(LnrReg):
     def __init__(self, data = None):
