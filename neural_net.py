@@ -23,12 +23,15 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 * Print initialization conditions (number of hidden nodes, etc.).
 * Underscore the attributes you don't wish the user to set
 * Get rid of momentum altogether?
-* Set errors better for logging
+* See to calculation redundancies -- ie. calcing errors twice better for logging
+* Revise how you talk about 'momentum'. Either implement it correctly in neural_net, or not.
+* Add overarching library import! Can you namespace directly from the module?
 
 Linear / Logistic Regression
 * Fix the API -- should also load_data(data), train(options)
 * Use a convergence_threshold instead of error_threshold
 * Fill out rest of README
+* Still going to call it momentum instead of drive?
 
 '''
 
