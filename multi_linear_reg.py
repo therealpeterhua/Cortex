@@ -8,9 +8,6 @@ This actually works for python 2... only relevant differences are `zip` --> iter
 '''
 
 class LnrReg(object):
-    ROUNDING = 5
-    MAX_ALLOWED_OUTPUT = 1
-
     def __init__(self, data = None):
         # PH:*** TAKE OPTIONS OF PARAMETERS, ALONG WITH DATA
         # decompose in the load_data, or elsewhere, with the fn(**args)
@@ -31,7 +28,7 @@ class LnrReg(object):
         self.set_defaults()
 
     def set_defaults(self):         # defaults that can be overridden at runtime
-        self.log = True
+        self.log_progress = True
         self.log_interval = 2000
 
         # Following 3 attributes govern the use of momentum in dynamically
@@ -48,7 +45,7 @@ class LnrReg(object):
         self.build_thetas()
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
-        self.alpha = 0.01               # learn rate   PH:*** rename?
+        self.learn_rate = 0.01               # learn rate   PH:*** rename?
         self.threshold = 0.00000001     # max acceptable AMSE
         self.max_iters = 50000          # make a fn of size of dataset?
 
@@ -75,7 +72,7 @@ class LnrReg(object):
         iterations = 0
 
         while (self.current_error > self.threshold and iterations < self.max_iters):
-            if self.log and not iterations % self.log_interval:
+            if self.log_progress and not iterations % self.log_interval:
                 self.log_params(iterations)
             self.calc_new_thetas()
             iterations += 1
@@ -87,7 +84,7 @@ class LnrReg(object):
         old_thetas, old_error = self.thetas, self.current_error
 
         partials = self.build_partials()
-        new_thetas = [ curr_theta - self.alpha * partial_term
+        new_thetas = [ curr_theta - self.learn_rate * partial_term
                         for partial_term, curr_theta
                         in izip(partials, self.thetas) ]
 
@@ -96,10 +93,10 @@ class LnrReg(object):
 
         # lower learn rate, and revert thetas and errors if grad descent fails to reduce error
         if self.increase_momentum and self.current_error < old_error:
-            self.alpha *= self.quick_factor
+            self.learn_rate *= self.quick_factor
         elif self.current_error > old_error:
             self.increase_momentum = False      # prevent further scaling momentum up
-            self.alpha *= self.brake_factor
+            self.learn_rate *= self.brake_factor
             self.thetas, self.current_error = old_thetas, old_error
 
     def build_partials(self):

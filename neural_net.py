@@ -20,9 +20,15 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 - Wrap all these in a callable format. `lib`, etc.
 
 * Hidden_sizes needs to be user inputted, along with other options.
-* Print initialization conditions (number of hidden nodes, etc.), and the final error and such.
-* Remove Octave tests.
+* Print initialization conditions (number of hidden nodes, etc.).
 * Underscore the attributes you don't wish the user to set
+* Get rid of momentum altogether?
+* Set errors better for logging
+
+Linear / Logistic Regression
+* Fix the API -- should also load_data(data), train(options)
+* Use a convergence_threshold instead of error_threshold
+* Fill out rest of README
 
 '''
 
@@ -84,6 +90,9 @@ class NeuralNet(object):
 
         # structure same as nodes, without bias
         self.deltas = ut.dupe_with_infs(self.nodes)
+
+        self.log_progress = False
+        self.log_interval = 500
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.learn_rate = 0.25
