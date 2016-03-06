@@ -1,7 +1,7 @@
 from pdb import set_trace
 from itertools import izip
 
-import utils
+import utils as ut
 
 '''
 This actually works for python 2... only relevant differences are `zip` --> itertools.izip and object inheritance on class declaration?
@@ -26,8 +26,8 @@ class LnrReg(object):
         return (item['input'] for item in self.training_data)
 
     def load_data(self, data):
-        utils.prevalidate(data)
-        self.training_data = utils.standardize(data)
+        ut.prevalidate(data)
+        self.training_data = ut.standardize(data)
         self.set_defaults()
 
     def set_defaults(self):         # defaults that can be overridden at runtime

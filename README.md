@@ -5,15 +5,15 @@ Specifically, it implements a neural network, and logistic and linear regression
 
 Performs batch gradient descent across all techniques, and employs sigmoid activation for the NN and logistic reg.
 
-Bold driver heuristic adjusts learning rate on the fly through a momentum factor (achieving multiples of efficiency gains in some cases), but feel free to turn off if you wish.
+Bold driver heuristic adjusts learning rate on the fly through a momentum factor (achieving multiples of efficiency gains in some cases), but turn off if you wish.
 
-Regularization factor addresses overfit by squashing higher-order features with great prejudice. Setting this value high exhibits the same (though disproportionally smaller) "compression" effect on lower-order weights, tending the system towards 0.
+Regularization factor addresses overfit by squashing higher-order features with great prejudice. (Beware setting this value high exhibits the same, though disproportionally smaller, "compression" effect on lower-order weights, tending the system towards 0.)
 
-Vectorized implementations have been implemented in Octave, and will be ported over to NumPy eventually. In the meantime, please enjoy some for loops and list comprehensions.
+Vectorized implementations have been implemented in Octave, and will be ported to NumPy eventually. In the meantime, please enjoy some for loops and list comprehensions.
 
+###Neural Network
 
-Training the XOR function...
-
+#####Example: Training the XOR function...
 ```python
 data = [
     {'input': [1, 0], 'output': [1]},
@@ -38,9 +38,10 @@ The lower the learning rate and higher the desired degree of accuracy, the longe
 ELABORATE MORE. Learning rate is dynamic? Or should recommend lowering the degree of accuracy?
 
 
-TODOs:
+###TODOs:
 - Pruning algo for neural network to "trim" redundant nodes
 - Serialization of weights, allowing user to save and resume work on large data sets
+- Add features normalization
 - Implement neural network momentum scaling
-- Regularization in logistic and linear regression
+- Regularization in logistic and linear regression, not only ANN
 - More extensive error handling -- empty layers for NN, edge-case inputs

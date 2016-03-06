@@ -3,7 +3,7 @@ from math import log
 from itertools import izip
 from random import uniform
 
-import utils
+import utils as ut
 
 '''
 NOTES ON XOR BATCH ANN GRADIENT DESCENT
@@ -22,6 +22,7 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 * Hidden_sizes needs to be user inputted, along with other options.
 * Print initialization conditions (number of hidden nodes, etc.), and the final error and such.
 * Remove Octave tests.
+* Underscore the attributes you don't wish the user to set
 
 '''
 
@@ -54,8 +55,8 @@ class NeuralNet(object):
         return self.nodes[-1]
 
     def load_data(self, data):
-        utils.prevalidate(data)
-        self.training_data = utils.standardize(data)
+        ut.prevalidate(data)
+        self.training_data = ut.standardize(data)
         self.set_defaults()
 
     def set_defaults(self):         # defaults that can be overridden at runtime
@@ -79,10 +80,10 @@ class NeuralNet(object):
         self.build_nodes()
         self.weights = self.build_weights()
 
-        self.gradients = utils.dupe_with_infs(self.weights)
+        self.gradients = ut.dupe_with_infs(self.weights)
 
         # structure same as nodes, without bias
-        self.deltas = utils.dupe_with_infs(self.nodes)
+        self.deltas = ut.dupe_with_infs(self.nodes)
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.learn_rate = 0.25
@@ -155,7 +156,8 @@ class NeuralNet(object):
             self.postprocess_gradients()
             self.set_new_weights()          #PH:*** calc here, and test
             iters += 1
-            # self.log_things()
+
+        self.log_finish(iters)
 
     def log_things(self):
         new_error = self.calc_error()
@@ -166,13 +168,16 @@ class NeuralNet(object):
         print 'Deltas: %s' % self.deltas
         print '\n\n'
 
+    def log_finish(self, iters):
+        print 'Finished training in %s epochs.\nFinal error is %s' % (iters, self.total_error)
+
     def reset_gradients(self):
         #PH: fix this. duping don't make sense. how about fill_with_zeros instead?
-        self.gradients = utils.dupe_with_zeros(self.gradients)
+        self.gradients = ut.dupe_with_zeros(self.gradients)
 
     def reset_deltas(self):
         #PH: fix this. duping don't make sense. how about fill_with_zeros instead?
-        self.deltas = utils.dupe_with_zeros(self.deltas)
+        self.deltas = ut.dupe_with_zeros(self.deltas)
 
     def run(self, user_given_input_row):
         NeuralNet.add_bias(user_given_input_row)
@@ -292,7 +297,7 @@ class NeuralNet(object):
             # skip bias node of all but output layer (leave others as 1)
             if i == 0 and layer_i != self.output_layer_i:
                 continue
-            self.nodes[layer_i][i] = utils.sigmoid(node_val)
+            self.nodes[layer_i][i] = ut.sigmoid(node_val)
 
     # I assume you use this after you run all the inputs and have the predicted outputs for every one?
     # Really, you need to do this one as you're looping through and calculating the output. In a neural net, the network itself IS the hypothesis Fn... remember that calc_error is the only place we ever call the hypothesis Fn from? Well, you're gonna need to do that now with the network... probably.
