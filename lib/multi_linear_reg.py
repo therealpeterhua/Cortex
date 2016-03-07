@@ -43,7 +43,7 @@ class LnrReg(object):
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
         self.learn_rate = 0.01               # learn rate   PH:*** rename?
-        self.threshold = 0.00000001     # max acceptable AMSE
+        self.threshold = 0.00001     # max acceptable AMSE
         self.max_iters = 50000          # make a fn of size of dataset?
 
     def build_thetas(self):
@@ -68,15 +68,25 @@ class LnrReg(object):
     def gradient_descent(self):
         iterations = 0
 
-        while (self.current_error > self.threshold and iterations < self.max_iters):
+        has_converged = False
+        while (not has_converged and iterations < self.max_iters):
+            old_error = self.current_error
+            
             if self.log_progress and not iterations % self.log_interval:
                 self.log_params(iterations)
             self.calc_new_thetas()
             iterations += 1
-
+            
+            has_converged = False
+            if self.current_error == old_error:
+                continue
+            elif abs(old_error - self.current_error) < self.threshold:
+                has_converged = True
+            
         print('======================================')
         print('Finished regression in ' + str(iterations) + ' iterations')
 
+    # calculate and assign new weights, else revert to old ones
     def calc_new_thetas(self):
         old_thetas, old_error = self._thetas, self.current_error
 
@@ -92,7 +102,7 @@ class LnrReg(object):
         if self.use_driver and self.current_error < old_error:
             self.learn_rate *= self.quick_factor
         elif self.current_error > old_error:
-            self.use_driver = False      # prevent further scaling momentum up
+            self.use_driver = False      # prevent scaling momentum up further
             self.learn_rate *= self.brake_factor
             self._thetas, self.current_error = old_thetas, old_error
 

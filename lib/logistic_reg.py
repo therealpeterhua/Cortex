@@ -6,7 +6,7 @@ from utils import sigmoid
 from multi_linear_reg import LnrReg
 
 class LogReg(LnrReg):
-    def __init__(self, data = None):
+    def __init__(self, data = None):        #PH:*** how is this necessary...
         super(LogReg, self).__init__(data)
 
     def set_defaults(self):                 #PH:*** how is this necessary...

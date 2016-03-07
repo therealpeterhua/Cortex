@@ -26,6 +26,7 @@ net.load_data(data)
 net.train(options)
 
 net.run([0, 1])     # 0.979
+net.run([1, 1])     # 0.029
 ```
 
 <sup>NOTE: Occasionally, your neural nets may return *higher error* results than anticipated. If so, try training the network again. Batch descent is sensitive to initial conditions and can hang on local minima, but each training call will randomize the starting weights.</sup>
@@ -61,15 +62,15 @@ regression = LnrReg()         # net = LnrReg(data) also acceptable
 regression.load_data(data)
 regression.train(options)
 
-regression.run([10])        # 32.9998
+regression.run([10])        # 32.996
 ```
 
 #####Restrictions:
 For now, only supports output of 1 element. Handles row vectors where last element is the output (`[x1, x2, y]`) as well as the `{'input': [x1, x2], 'output': [y]}` format used in our neural net.
 
 #####Adjustable model parameters(`options` dict in example)
-  - `threshold`: Instead of using an error_threshold like in neural nets, linear regression uses a convergence threshold. If the difference between the errors of 2 successful gradient descents are below the threshold, the learning process will conclude.
-  - `max_iters`: Same concept as in neural net (default 50000).
+  - `threshold`: Instead of using an error_threshold like in neural nets, linear regression uses a convergence threshold (default 0.00001). If the difference between the errors of 2 successful gradient descents are below the threshold, the learning process will conclude.
+  - `max_iters`: Same concept as in neural net (default 50000). The learning process will stop once `max_iters` epochs are reached, unless it has already converged.
   - `learn_rate`: Same concept as neural net (default 0.01). You shouldn't need to adjust this if you leave momentum on.
   - `increase_momentum`: Boolean value determining whether to dynamically scale learning algo (default True). Strongly recommended you keep this on. If you leave it off, you'll have to adjust the learn_rate manually.
   - `log_progress`: Same as in neural net (default False).
