@@ -26,7 +26,7 @@ class LogReg(LnrReg):
         for input_row, output_val in zipped_data_iters:
             predicted_output = self.calc_hypothesis(input_row)
 
-            # predicted_output can == 0 or 1 due to rounding
+            # predicted_output can == 0 or 1 due to rounding (math domain error)
             if predicted_output != output_val:
                 total_error += (
                     -output_val * log(predicted_output) - (1 - output_val) * log(1 - predicted_output)

@@ -3,8 +3,8 @@ It implements a neural network, and logistic and linear regression, using no ext
 
 Performs batch gradient descent across all techniques, and employs sigmoid activation for the NN and logistic reg.
 Bold driver heuristic adjusts learning rate on the fly based on gradient descent performance (achieving multiples of efficiency gains in some cases).
-Momentum factor in
-Regularization factor allows you to address overfit by compressing large weights.
+
+Regularization factor helps address overfit by compressing large weights.
 
 Vectorized implementations have been implemented in Octave, and will be ported to NumPy eventually. In the meantime, please enjoy some for loops and list comprehensions.
 
@@ -62,7 +62,7 @@ regression = LnrReg()         # net = LnrReg(data) also acceptable
 regression.load_data(data)
 regression.train(options)
 
-regression.run([10])        # 32.996
+regression.run([10])        # 32.99
 ```
 
 #####Restrictions:
@@ -72,7 +72,9 @@ For now, only supports output of 1 element. Handles row vectors where last eleme
   - `threshold`: Instead of using an error_threshold like in neural nets, linear regression uses a convergence threshold (default 0.00001). If the difference between the errors of 2 successful gradient descents are below the threshold, the learning process will conclude.
   - `max_iters`: Same concept as in neural net (default 50000). The learning process will stop once `max_iters` epochs are reached, unless it has already converged.
   - `learn_rate`: Same concept as neural net (default 0.01). You shouldn't need to adjust this if you leave momentum on.
-  - `increase_momentum`: Boolean value determining whether to dynamically scale learning algo (default True). Strongly recommended you keep this on. If you leave it off, you'll have to adjust the learn_rate manually.
+  - `use_driver`: Boolean value determining whether to dynamically scale learning rate (default True). Strongly recommended you keep this on. Nothing wrong with turning it off, but greatly speeds up the descent process.
+  - `quick_factor`: If `use_driver` is on, learning rate is multiplied by this factor every time a successful gradient descent is successful (default 1.1).
+  - `brake_factor`: If `use_driver` is on, learning rate is multiplied by this factor every time gradient descent fails (default 0.6). Note that in this case, weights will be "rewound" and gradient descent will be attempted anew with the new learing_rate.
   - `log_progress`: Same as in neural net (default False).
   - `log_interval`: Same as in neural net (default 2000).
 
@@ -87,6 +89,7 @@ Same API as linear regression, hallelujah.
 
 
 ###TODOs:
+- Dry up boilerplate setup code into separate module
 - Pruning algo for neural network to "trim" redundant nodes
 - Serialization of weights, allowing user to save and resume work on large data sets
 - Prettify multi-class learning for ANN by vectorizing user-given output number into 1s and 0s.

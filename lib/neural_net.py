@@ -36,8 +36,8 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 * Should probably delete the underscores on properties -- just looks messy
 
 Linear / Logistic Regression
+* Switch example to use multiple inputs
 * Fix the API -- should also load_data(data), train(options)
-* Use a convergence_threshold instead of error_threshold
 * Fill out rest of README
 * Still going to call it momentum instead of drive?
 
@@ -123,15 +123,15 @@ class NeuralNet(object):
         hiddens = self.recommended_hidden_sizes()
 
         return {
-            "hidden_sizes": hiddens,
-            "reg_rate": 0.0,
-            "epsilon": 2,
-            "momentum": 1.1,
-            "log_progress": False,
-            "log_interval": 1000,
-            "learn_rate": 0.25,
-            "max_iters": 10000,
-            "error_threshold": 0.05
+            'hidden_sizes': hiddens,
+            'reg_rate': 0.0,
+            'epsilon': 2,
+            'momentum': 1.1,
+            'log_progress': False,
+            'log_interval': 1000,
+            'learn_rate': 0.25,
+            'max_iters': 10000,
+            'error_threshold': 0.05
         }
 
     def recommended_hidden_sizes(self):

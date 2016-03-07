@@ -2,6 +2,7 @@ from pdb import set_trace
 from itertools import izip
 
 import validator as vl
+import utils as ut
 
 
 class LnrReg(object):
@@ -22,29 +23,33 @@ class LnrReg(object):
     def load_data(self, data):
         vl.prevalidate(data)
         self.training_data = vl.standardize(data)
-        self.set_defaults()
-
-    def set_defaults(self):         # defaults that can be overridden at runtime
-        self.log_progress = True
-        self.log_interval = 2000
-
-        # Following 3 attributes govern the use of momentum in dynamically
-        # adjusting the learning rate. Setting self.use_driver to False
-        # prevents the use of the quick_factor to speed up gradient descent
-        self.use_driver = True
-        self.quick_factor = 1.1
-        self.brake_factor = 0.6
-
         self.add_training_bias()
+
+    def set_options(self, options):         # defaults that can be overridden at runtime
+        used_properties = self.get_defaults()
+        ut.replace_in(used_properties, options)
+        
+        for prop_name, value in used_properties.iteritems():
+            setattr(self, prop_name, value)
 
         self.current_error = float('inf')
         self._thetas = []
         self.build_thetas()
-
-        #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
-        self.learn_rate = 0.01               # learn rate   PH:*** rename?
-        self.threshold = 0.00001     # max acceptable AMSE
-        self.max_iters = 50000          # make a fn of size of dataset?
+    
+    def get_defaults(self):
+        return {
+            'log_progress': True,
+            'log_interval': 2000,
+            # Following 3 attributes govern the use of momentum in dynamically
+            # adjusting the learning rate. Setting 'use_driver' to False
+            # prevents the use of the quick_factor to speed up gradient descent
+            'use_driver': True,
+            'quick_factor': 1.1,
+            'brake_factor': 0.6,
+            'learn_rate': 0.01,
+            'threshold': 0.00001,
+            'max_iters': 50000
+        }
 
     def build_thetas(self):
         self._thetas = [0 for _ in self.training_data[0]['input']]
@@ -57,6 +62,10 @@ class LnrReg(object):
         input_row.insert(0, 1)
 
     def train(self, options = None):          #PH:*** set options...
+        if options is None:
+            options = {}
+        self.set_options(options)
+        
         self.gradient_descent()
         print( 'Thetas: ' + str(self._thetas) )
         return self._thetas
@@ -138,9 +147,9 @@ class LnrReg(object):
         ))
 
     def calc_error(self):
-        return self.avg_mse()
+        return self.avg_squared_error()
 
-    def avg_mse(self):
+    def avg_squared_error(self):
         squared_err_sum = 0
         zipped_data_iters = izip(self.input_iter, self.output_iter)
 
@@ -159,5 +168,5 @@ data = [
 ]
 
 regression = LnrReg(data)
-regression.train()
+regression.train({'threshold': 0.00001})
 print regression.run([10])
