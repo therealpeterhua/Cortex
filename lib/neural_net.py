@@ -110,7 +110,7 @@ class NeuralNet(object):
         self._weights = self.build_weights()
 
         self._gradients = ut.deep_dup(self._weights)
-        ut.fill_with(self._gradients, float('inf'))
+        ut.fill_with(self._gradients, 0)
 
         # structure same as nodes, without bias
         self._deltas = ut.deep_dup(self._nodes)
@@ -124,7 +124,7 @@ class NeuralNet(object):
             'hidden_sizes': hiddens,
             'reg_rate': 0.0,
             'epsilon': 2,
-            'momentum': 1.1,
+            'momentum': 0.1,
             'log_progress': False,
             'log_interval': 1000,
             'learn_rate': 0.25,
@@ -250,7 +250,6 @@ class NeuralNet(object):
 
     def accumulate_gradient(self, output_row):
         # REM: self._weights is exactly as formularized -- the first weight does indeed connect the first and second layers, and so on. len(self._weights) would be the output layer!
-
         for layer_i in xrange(self.output_layer_i, 0, -1):
             prev_layer_i = layer_i - 1
 
@@ -316,7 +315,9 @@ class NeuralNet(object):
             for i, next_i_weights in enumerate(layer_weights):
                 for j, weight in enumerate(next_i_weights):
                     gradient_val = self._gradients[l][i][j]
-                    change = self.momentum * self.learn_rate * gradient_val
+                    # set_trace()         #PH:*** MOMENTUM, OLD_GRADIENT SOMETIMES INFINITE!
+                    momentum_val = old_gradient[l][i][j] * self.momentum
+                    change = (self.learn_rate * gradient_val) + momentum_val
                     next_i_weights[j] = weight - change
 
     def activate(self, layer_i):

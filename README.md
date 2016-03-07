@@ -43,7 +43,7 @@ Each element of the output vector must be between 0 and 1. Trains multi-class sc
   - `max_iters`: The maximum # of iterations to be performed before concluding (default 10000).
   - `epsilon`: Determines range of initialization weights between (-epsilon, +epsilon). Defaults to 2.
   - `reg_rate`: Governs regularization term (default 0). Setting this to a high value squashes high weights (esp. when fitting high-order features), but tends the system of weights toward 0. Test different values with your dataset -- the ideal regularization rate may be on the order of magnitude of 0.0001, or single-digit integers.
-  - `momentum`: Determines the momentum factor used to "push" each iteration and weight adjustment (default 1.1). Should be greater than 1. This number will be multiplied to each gradient descent. ** keep? **
+  - `momentum`: Value >= 0 (default 0.1). Set to 0 to turn off, setting too high may cause one to "overshoot" the minimum. Dramatically speeds up the descent process in "ravine"-style cost surfaces (think low slope, steep sides).
   - `log_progress`: Boolean value determining whether to log progress (default False).
   - `log_interval`: Numerical value (default 1000). Model will log relevant stats every `log_interval` iterations.
 
