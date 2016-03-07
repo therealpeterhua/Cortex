@@ -1,7 +1,7 @@
 from pdb import set_trace
 from itertools import izip
 
-import utils as ut
+import validator as vl
 
 
 class LnrReg(object):
@@ -13,15 +13,15 @@ class LnrReg(object):
 
     @property
     def output_iter(self):
-        return (item['output'] for item in self.training_data)
+        return (item['output'][0] for item in self.training_data)
 
     @property
     def input_iter(self):
         return (item['input'] for item in self.training_data)
 
     def load_data(self, data):
-        ut.prevalidate(data)
-        self.training_data = ut.standardize(data)
+        vl.prevalidate(data)
+        self.training_data = vl.standardize(data)
         self.set_defaults()
 
     def set_defaults(self):         # defaults that can be overridden at runtime
@@ -29,16 +29,16 @@ class LnrReg(object):
         self.log_interval = 2000
 
         # Following 3 attributes govern the use of momentum in dynamically
-        # adjusting the learning rate. Setting self.increase_momentum to False
+        # adjusting the learning rate. Setting self.use_driver to False
         # prevents the use of the quick_factor to speed up gradient descent
-        self.increase_momentum = True
+        self.use_driver = True
         self.quick_factor = 1.1
         self.brake_factor = 0.6
 
         self.add_training_bias()
 
         self.current_error = float('inf')
-        self.thetas = []
+        self._thetas = []
         self.build_thetas()
 
         #PH:*** redo the threshold here. you're trying to CONVERGE. not REACH ZERO ERROR
@@ -47,7 +47,7 @@ class LnrReg(object):
         self.max_iters = 50000          # make a fn of size of dataset?
 
     def build_thetas(self):
-        self.thetas = [0 for _ in self.training_data[0]['input']]
+        self._thetas = [0 for _ in self.training_data[0]['input']]
 
     def add_training_bias(self):
         for item in self.training_data:
@@ -58,8 +58,8 @@ class LnrReg(object):
 
     def train(self, options = None):          #PH:*** set options...
         self.gradient_descent()
-        print( 'Thetas: ' + str(self.thetas) )
-        return self.thetas
+        print( 'Thetas: ' + str(self._thetas) )
+        return self._thetas
 
     def run(self, input_row):
         self.add_bias(input_row)                  # add bias
@@ -78,28 +78,28 @@ class LnrReg(object):
         print('Finished regression in ' + str(iterations) + ' iterations')
 
     def calc_new_thetas(self):
-        old_thetas, old_error = self.thetas, self.current_error
+        old_thetas, old_error = self._thetas, self.current_error
 
         partials = self.build_partials()
         new_thetas = [ curr_theta - self.learn_rate * partial_term
                         for partial_term, curr_theta
-                        in izip(partials, self.thetas) ]
+                        in izip(partials, self._thetas) ]
 
-        self.thetas = new_thetas
+        self._thetas = new_thetas
         self.current_error = self.calc_error()
 
         # lower learn rate, and revert thetas and errors if grad descent fails to reduce error
-        if self.increase_momentum and self.current_error < old_error:
+        if self.use_driver and self.current_error < old_error:
             self.learn_rate *= self.quick_factor
         elif self.current_error > old_error:
-            self.increase_momentum = False      # prevent further scaling momentum up
+            self.use_driver = False      # prevent further scaling momentum up
             self.learn_rate *= self.brake_factor
-            self.thetas, self.current_error = old_thetas, old_error
+            self._thetas, self.current_error = old_thetas, old_error
 
     def build_partials(self):
         partials = []
 
-        for j, theta in enumerate(self.thetas):
+        for j, theta in enumerate(self._thetas):
             sigma = 0
 
             zipped_data_iters = izip(self.input_iter, self.output_iter)
@@ -119,12 +119,12 @@ class LnrReg(object):
     def theta_trans_X(self, input_row):
         return sum( theta * input_val
                     for theta, input_val
-                    in izip(self.thetas, input_row) )
+                    in izip(self._thetas, input_row) )
 
     def log_params(self, num_iterations):
         dividing_line = '--------------------------------------'
         print('After %s iterations...\nThetas are %s\nError is %s\n%s' % (
-            num_iterations, self.thetas, self.current_error, dividing_line
+            num_iterations, self._thetas, self.current_error, dividing_line
         ))
 
     def calc_error(self):
@@ -140,3 +140,14 @@ class LnrReg(object):
             squared_err_sum += (predicted_val - actual_val) ** 2
 
         return squared_err_sum / (2 * len(self.training_data))
+
+data = [
+  {'input': [4], 'output': [9]},      # [4, 0]   would also work
+  {'input': [2.5], 'output': [3]},    # [2.5, 3] would also work
+  {'input': [7], 'output': [21]},
+  {'input': [-2], 'output': [-15]}
+]
+
+regression = LnrReg(data)
+regression.train()
+print regression.run([10])

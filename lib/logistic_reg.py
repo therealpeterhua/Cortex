@@ -9,7 +9,7 @@ class LogReg(LnrReg):
     def __init__(self, data = None):
         super(LogReg, self).__init__(data)
 
-    def set_defaults(self):
+    def set_defaults(self):                 #PH:*** how is this necessary...
         super(LogReg, self).set_defaults()
 
     def calc_hypothesis(self, input_row):

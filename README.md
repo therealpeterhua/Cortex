@@ -2,7 +2,8 @@ This library is a tool for 3 popular prediction / classification techniques.
 It implements a neural network, and logistic and linear regression, using no external libraries.
 
 Performs batch gradient descent across all techniques, and employs sigmoid activation for the NN and logistic reg.
-Bold driver heuristic adjusts learning rate on the fly through a momentum factor (achieving multiples of efficiency gains in some cases), but turn off if you wish.
+Bold driver heuristic adjusts learning rate on the fly based on gradient descent performance (achieving multiples of efficiency gains in some cases).
+Momentum factor in
 Regularization factor allows you to address overfit by compressing large weights.
 
 Vectorized implementations have been implemented in Octave, and will be ported to NumPy eventually. In the meantime, please enjoy some for loops and list comprehensions.
@@ -18,9 +19,9 @@ data = [
     {'input': [1, 1], 'output': [1]},
 ]
 
-options = {'momentum': 1.1, 'log_progress': True}
+options = {'log_progress': True}
 
-net = NeuralNet()
+net = NeuralNet()       # net = NeuralNet(data) also acceptable
 net.load_data(data)
 net.train(options)
 
@@ -35,13 +36,13 @@ Each element of the output vector must be between 0 and 1. Trains multi-class sc
 #####Adjustable model parameters (`options` dict in XOR example)
   - `hidden_sizes`: Sets the hidden node architecture using a list. Model will have `len(hidden_sizes)` hidden layers, with each element being the size of its corresponding layer. [2, 3, 4] creates 3 hidden layers of with 2, 3, and 4 nodes respectively. Uses intelligent defaults otherwise. The more hidden layers / nodes per layer, the lower the final training error (generally), and the more computationally expensive the training process.
   - `learn_rate`: Determines how aggressively gradient descent runs (default 0.25). Setting too low will result in less progress made per iteration (and longer processing time). Setting too high may result in "overshooting" the optimum, or a divergent learning process.
-  - `error_threshold`: The maximum acceptable average error of the model (default 0.05). The learning process will stop once errors are below the threshold or the `max_iters` has been reached, whichever comes first.
-  - `max_iters`: The maximum # of iterations to be performed before stopping (default 10000).
-  - `epsilon`: Determines range of initialization weights between (-epsilon, +epsilon). Uses intelligent defaults.
+  - `error_threshold`: The maximum acceptable average error of the model (default 0.05). The learning process will conclude once errors are below the threshold or `max_iters` has been reached, whichever comes first.
+  - `max_iters`: The maximum # of iterations to be performed before concluding (default 10000).
+  - `epsilon`: Determines range of initialization weights between (-epsilon, +epsilon). Defaults to 2.
   - `reg_rate`: Governs regularization term (default 0). Setting this to a high value squashes high weights (esp. when fitting high-order features), but tends the system of weights toward 0. Test different values with your dataset -- the ideal regularization rate may be on the order of magnitude of 0.0001, or single-digit integers.
   - `momentum`: Determines the momentum factor used to "push" each iteration and weight adjustment (default 1.1). Should be greater than 1. This number will be multiplied to each gradient descent. ** keep? **
   - `log_progress`: Boolean value determining whether to log progress (default False).
-  - `log_interval`: Numerical value (default 500). Model will log relevant stats every `log_interval` iterations.
+  - `log_interval`: Numerical value (default 1000). Model will log relevant stats every `log_interval` iterations.
 
 
 ###Linear Regression
@@ -54,20 +55,20 @@ data = [
   {'input': [-2], 'output': [-15]},
 ]
 
-options = {'momentum': 1.1, 'log_progress': True}
+options = {'log_progress': True}
 
-regression = LnrReg()
+regression = LnrReg()         # net = LnrReg(data) also acceptable
 regression.load_data(data)
 regression.train(options)
 
-regression.run([10])        # 31.97
+regression.run([10])        # 32.9998
 ```
 
 #####Restrictions:
-Only supports output of 1 element. Handles row vectors where last element is the output (`[x1, x2, y]`) as well as the `{'input': [x1, x2], 'output': [y]}` format used in our neural net.
+For now, only supports output of 1 element. Handles row vectors where last element is the output (`[x1, x2, y]`) as well as the `{'input': [x1, x2], 'output': [y]}` format used in our neural net.
 
 #####Adjustable model parameters(`options` dict in example)
-  - `convergence_threshold`: Instead of using an error_threshold like in neural nets, linear regression uses a convergence_threshold.
+  - `threshold`: Instead of using an error_threshold like in neural nets, linear regression uses a convergence threshold. If the difference between the errors of 2 successful gradient descents are below the threshold, the learning process will conclude.
   - `max_iters`: Same concept as in neural net (default 50000).
   - `learn_rate`: Same concept as neural net (default 0.01). You shouldn't need to adjust this if you leave momentum on.
   - `increase_momentum`: Boolean value determining whether to dynamically scale learning algo (default True). Strongly recommended you keep this on. If you leave it off, you'll have to adjust the learn_rate manually.
@@ -78,7 +79,7 @@ Only supports output of 1 element. Handles row vectors where last element is the
 ###Logistic Regression
 
 #####Restrictions:
-Only supports output of 1 element, of the value between 0 and 1. Will support multi-class in the future. Also supports both `[x1, x2, y]` and `{'input': [x1, x2], 'output': [y]}` formats.
+For now, only supports output of 1 element, of discrete value 0 or 1. Will support multi-class in the future. Also supports both `[x1, x2, y]` and `{'input': [x1, x2], 'output': [y]}` formats.
 
 #####Adjustable model parameters (these can be set similar to above)
 Same API as linear regression, hallelujah.
