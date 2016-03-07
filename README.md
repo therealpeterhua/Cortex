@@ -1,3 +1,5 @@
+## ConnectTheDots
+
 This library is a tool for 3 popular prediction / classification techniques.
 It implements a neural network, and logistic and linear regression, using no external libraries.
 

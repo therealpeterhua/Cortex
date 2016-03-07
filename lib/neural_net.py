@@ -20,7 +20,6 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 - Humanize all variable names. No thetas & alphas.
 - Wrap all these in a callable format. `lib`, etc.
 
-* Hidden_sizes needs to be user inputted, along with other options.
 * Add in suggested epsilons per layer -- isn't there a simple number for this?
 * Print initialization conditions (number of hidden nodes, etc.).
 * Underscore the attributes you don't wish the user to set
@@ -37,9 +36,7 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 
 Linear / Logistic Regression
 * Switch example to use multiple inputs
-* Fix the API -- should also load_data(data), train(options)
 * Fill out rest of README
-* Still going to call it momentum instead of drive?
 
 '''
 
@@ -112,10 +109,11 @@ class NeuralNet(object):
         self.build_nodes()
         self._weights = self.build_weights()
 
-        self._gradients = ut.dupe_with_infs(self._weights)
+        self._gradients = ut.deep_dup(self._weights)
+        ut.fill_with(self._gradients, float('inf'))
 
         # structure same as nodes, without bias
-        self._deltas = ut.dupe_with_infs(self._nodes)
+        self._deltas = ut.deep_dup(self._nodes)
         self._total_error = float('inf')
 
     # provides defaults dict of model params intended for user setting
@@ -170,6 +168,8 @@ class NeuralNet(object):
         iters = 0
         while ( iters < self.max_iters and
                 self._total_error > self.error_threshold):
+            
+            old_gradient = ut.deep_dup(self._gradients)
             self.reset_gradients()          #PH:*** don't do this for every row!
 
             for input_row, output_row in self.training_iter:
@@ -179,7 +179,7 @@ class NeuralNet(object):
                 self.back_prop(output_row)
 
             self.postprocess_gradients()
-            self.set_new_weights()          #PH:*** Bold drive here
+            self.set_new_weights(old_gradient)          #PH:*** Bold drive here
             iters += 1
 
             if self.log_progress and not iters % self.log_interval:
@@ -203,12 +203,10 @@ class NeuralNet(object):
         print 'Finished training in %s epochs.\nFinal error is %s' % (iters, self._total_error)
 
     def reset_gradients(self):
-        #PH: fix this. duping don't make sense. how about fill_with_zeros instead?
-        self._gradients = ut.dupe_with_zeros(self._gradients)
+        self._gradients = ut.fill_with(self._gradients, 0)
 
     def reset_deltas(self):
-        #PH: fix this. duping don't make sense. how about fill_with_zeros instead?
-        self._deltas = ut.dupe_with_zeros(self._deltas)
+        self._deltas = ut.fill_with(self._deltas, 0)
 
     def run(self, user_given_input_row):
         NeuralNet.add_bias(user_given_input_row)
@@ -311,8 +309,8 @@ class NeuralNet(object):
 
         self._total_error = self.calc_error()
 
-    # FIX FUNCTION ORDER!
-    def set_new_weights(self):
+    #PH:*** FIX FUNCTION ORDER!
+    def set_new_weights(self, old_gradient):
         #PH: implement momentum in a while loop here. Implement new_weights, check their errors... if higher, decrease learning rate
         for l, layer_weights in enumerate(self._weights):
             for i, next_i_weights in enumerate(layer_weights):

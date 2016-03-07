@@ -4,12 +4,26 @@ from itertools import izip
 
 def sigmoid(val):
     return 1 / (1 + e ** (-val))
+    
+# deep duplicates a mtrx
+def deep_dup(matrix):
+    new_matrix = []
+    if type(matrix) is not list:
+        return matrix
+    
+    for i, element in enumerate(matrix):
+        new_matrix.append(deep_dup(element))
+    
+    return new_matrix
 
-def dupe_with_zeros(matrix):
-    if type(matrix[0]) is list:
-        return [ dupe_with_zeros(el) for el in matrix ]
-    else:
-        return [0 for el in matrix]
+def fill_with(matrix, value):
+    if type(matrix) is not list:
+        return value
+    
+    for i, element in enumerate(matrix):
+        matrix[i] = fill_with(element, value)
+    
+    return matrix
 
 # replaces overlapping keys in left and right with the right value
 def replace_in(left, right):
@@ -18,13 +32,6 @@ def replace_in(left, right):
             left[key] = right[key]
 
     return left
-
-# fills matrix of even nesting with infinites
-def dupe_with_infs(matrix):
-    if type(matrix[0]) is list:
-        return [ dupe_with_infs(el) for el in matrix ]
-    else:
-        return [float('inf') for el in matrix]
 
 # returns the dot product of 2 matrices, filling in a result matrix if given
 def fill_dot_product(aye, bee, fill_in = None):
