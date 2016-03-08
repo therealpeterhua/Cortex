@@ -2,12 +2,12 @@ from math import log
 from itertools import izip
 from random import uniform
 
-import utils as ut
-import validator as vl
+from . import utils as ut
+from . import validator as vl
 
 
 class NeuralNet(object):
-    
+
     @staticmethod
     def add_bias(input_row):
         input_row.insert(0, 1)

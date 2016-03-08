@@ -1,6 +1,6 @@
 from math import log, e
 from itertools import izip
-from utils import sigmoid
+from . utils import sigmoid
 
 
 from multi_linear_reg import LnrReg

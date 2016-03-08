@@ -1,7 +1,7 @@
 from itertools import izip
 
-import validator as vl
-import utils as ut
+from . import validator as vl
+from . import utils as ut
 
 
 class LnrReg(object):
