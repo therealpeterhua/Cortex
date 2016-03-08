@@ -10,7 +10,7 @@ Vectorized implementations have been implemented in Octave, and will be ported t
 ####Example: Training the XOR function...
 ```python
 data = [
-    {'input': [1, 0], 'output': [1]},
+    {'input': [1, 0], 'output': [1]},     # also accepts [1, 0, 1]
     {'input': [0, 1], 'output': [1]},
     {'input': [0, 0], 'output': [0]},
     {'input': [1, 1], 'output': [0]},
@@ -21,7 +21,7 @@ options = {
     'log_progress': True
 }
 
-net = NeuralNet()       # net = NeuralNet(data) also acceptable
+net = NeuralNet()       # also accepts `net = NeuralNet(data)`
 net.load_data(data)
 net.train(options)
 
@@ -32,7 +32,7 @@ net.run([1, 1])     # 0.029
 <sup>NOTE: Occasionally, your neural nets may return *higher error* results than anticipated. If so, try training the network again. Batch descent is sensitive to initial conditions and can hang on local minima, but each training call will randomize the starting weights.</sup>
 
 #####Guidelines:
-Handles any number of input features of any size, and any number of output elements between 0 and 1 (preferably binary -- 0 or 1). Trains multi-class scenarios via multiple-element output vectors (ie. `[1, 0, 0]`, `[0, 1, 0]`, `[0, 0, 1]` for Class I, Class II, Class III). This multi-class output API will be abstracted away in the future so you can just use unique integers and strings to represent different classes.
+Handles any number of input features of any size, and any number of output elements between 0 and 1 (preferably binary -- 0 or 1). Trains multi-class scenarios via multiple-element output vectors (ie. `[1, 0, 0]`, `[0, 1, 0]`, `[0, 0, 1]` representing Class I, Class II, Class III). This multi-class output API will be abstracted away in the future so you can just use unique integers and strings to represent different classes. Handles row vectors where last element is the output, `[x1, x2, y]`, as well as the `{'input': [x1, x2], 'output': [y]}` format used in our neural net.
 
 #####Optional model parameters (`options` dict in XOR example)
   - `hidden_sizes`: Sets the hidden node architecture using a list. Model will have `len(hidden_sizes)` hidden layers, with each element being the size of its corresponding layer. [2, 3, 4] creates 3 hidden layers of with 2, 3, and 4 nodes respectively. Uses reasonable defaults otherwise. The more hidden layers / nodes per layer, the lower the final training error (generally), and the more computationally expensive the training process.
@@ -58,7 +58,7 @@ data = [
 
 options = {'log_progress': True}
 
-regression = LnrReg()         # net = LnrReg(data) also acceptable
+regression = LnrReg()         # also accepts `net = LnrReg(data)`
 regression.load_data(data)
 regression.train(options)
 
@@ -66,7 +66,7 @@ regression.run([2, 2])        # 15.999
 ```
 
 #####Guidelines:
-Handles any number of input features of any size. For now, only supports output of 1 element. Handles row vectors where last element is the output (`[x1, x2, y]`) as well as the `{'input': [x1, x2], 'output': [y]}` format used in our neural net. The model will log a theta vector at the conclusion of training, which can corresponds to the "weights" of each respective input (with the first weight being the bias, or intercept, value).
+Handles any number of input features of any size. For now, only supports output of 1 element. Handles row vectors where last element is the output, `[x1, x2, y]`, as well as the `{'input': [x1, x2], 'output': [y]}` format used in our neural net. The model will log a theta vector at the conclusion of training, which can corresponds to the "weights" of each respective input (with the first weight being the bias, or intercept, value).
 
 #####Optional model parameters(`options` dict in example)
   - `threshold`: Instead of using an error_threshold like in neural nets, linear regression uses a convergence threshold (default 0.00001). If the difference between the errors of 2 successful gradient descents are below the threshold, the learning process will conclude.
