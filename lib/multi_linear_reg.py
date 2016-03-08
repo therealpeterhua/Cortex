@@ -1,4 +1,3 @@
-from pdb import set_trace
 from itertools import izip
 
 import validator as vl

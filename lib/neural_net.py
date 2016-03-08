@@ -1,4 +1,3 @@
-from pdb import set_trace
 from math import log
 from itertools import izip
 from random import uniform

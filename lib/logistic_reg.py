@@ -1,4 +1,3 @@
-from pdb import set_trace
 from math import log, e
 from itertools import izip
 from utils import sigmoid
