@@ -5,13 +5,9 @@ from random import uniform
 import utils as ut
 import validator as vl
 
-'''
-* GET THE OVERARCHING LIBRARY ARCHITECTURE IMPLEMENTED! Namespace from top-line module?
-* Try all techniques with new library architecture
-* Delete this block of code...
-'''
 
 class NeuralNet(object):
+    
     @staticmethod
     def add_bias(input_row):
         input_row.insert(0, 1)

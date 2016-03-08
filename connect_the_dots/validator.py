@@ -1,4 +1,4 @@
-# The goal of this method is to raise informative errors where appropriate, ie. inconsistent data types or data lengths.
+# This function raises informative errors where appropriate, ie. inconsistent data types or data lengths.
 def prevalidate(data):
     if not data:
         raise Exception("Can't use blank data.")

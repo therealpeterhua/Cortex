@@ -9,6 +9,8 @@ Vectorized implementations have been implemented in Octave, and will be ported t
 ###Neural Network
 ####Example: Training the XOR function...
 ```python
+from connect_the_dots import NeuralNet
+
 data = [
     {'input': [1, 0], 'output': [1]},     # also accepts [1, 0, 1]
     {'input': [0, 1], 'output': [1]},
@@ -25,8 +27,8 @@ net = NeuralNet()       # also accepts `net = NeuralNet(data)`
 net.load_data(data)
 net.train(options)
 
-net.run([0, 1])     # 0.979
-net.run([1, 1])     # 0.029
+print net.run([0, 1])     # 0.979
+print net.run([1, 1])     # 0.029
 ```
 
 <sup>NOTE: Occasionally, your neural nets may return *higher error* results than anticipated. If so, try training the network again. Batch descent is sensitive to initial conditions and can hang on local minima, but each training call will randomize the starting weights.</sup>
@@ -49,9 +51,11 @@ Handles any number of input features of any size, and any number of output eleme
 ###Linear Regression
 ####Example: Training y = 2 + 4(x1) + 3(x2) function...
 ```python
+from connect_the_dots import LnrReg
+
 data = [
+  {'input': [2, 3], 'output': [19]},     # x1 = 2, x2 = 3, y = 19
   {'input': [1, 1], 'output': [9]},      # also accepts [1, 1, 9]
-  {'input': [2, 3], 'output': [19]},
   {'input': [-5, 2], 'output': [-12]},
   {'input': [3, -4], 'output': [2]}
 ]
@@ -62,7 +66,7 @@ regression = LnrReg()         # also accepts `net = LnrReg(data)`
 regression.load_data(data)
 regression.train(options)
 
-regression.run([2, 2])        # 15.999
+print regression.run([2, 2])        # 15.999
 ```
 
 #####Guidelines:
@@ -82,9 +86,11 @@ Handles any number of input features of any size. For now, only supports output 
 ###Logistic Regression
 ####Example: Training the x1 = x2 decision boundary...
 ```python
+from connect_the_dots import LogReg
+
 data = [
-    [1, 0.9, 0],        # also accepts {'input': [1, 0.9], 'output': [0]}
-    [5, 4, 0],
+    [1, 0.9, 0],      # x1 = 1, x2 = 0.9, y = 0
+    [5, 4, 0],        # also accepts {'input': [1, 0.9], 'output': [0]}
     [6, 1, 0],
     [8, 7, 0],
     [1, 3, 1],
@@ -97,10 +103,10 @@ data = [
 regression = LogReg(data)
 regression.train()
 
-regression.run([1, 0.5])      # 0.01
-regression.run([5, 4])        # 0.00
-regression.run([9, 10])       # 1.00
-regression.run([10, 15])      # 1.00
+print regression.run([1, 0.5])      # 0.01
+print regression.run([5, 4])        # 0.00
+print regression.run([9, 10])       # 1.00
+print regression.run([10, 15])      # 1.00
 ```
 
 #####Guidelines:
