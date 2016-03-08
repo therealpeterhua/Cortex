@@ -1,6 +1,6 @@
 # This file contains examples from the README. Execute it directly via `python examples.py
 
-from connect_the_dots import NeuralNet, LogReg, LnrReg
+from cortex import NeuralNet, LogReg, LnrReg
 
 
 
