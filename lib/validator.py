@@ -27,14 +27,10 @@ def standardize(data):
 
     for row_i, list_item in enumerate(data):
         output_idx = len(list_item) - 1
-        data[row_i] = {
-            'input': list_item[0:output_idx],
-            'output': [list_item[output_idx]]
-        }
-
+        data[row_i] = { 'input': list_item[0:output_idx],
+                        'output': [list_item[output_idx]] }
     return data
 
-#PH:*** change to implementation of `any`. DRY UP THE BELOW
 def _validate_list(data, list_length):
     data_type = list
     for item in data:
@@ -45,7 +41,6 @@ def _validate_list(data, list_length):
             )
             raise Exception(error_message)
 
-#PH:*** change to implementation of `any`. DRY UP THE BELOW
 def _validate_dict(data, input_length):
     data_type = dict
     for item in data:

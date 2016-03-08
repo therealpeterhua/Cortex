@@ -6,7 +6,7 @@ from utils import sigmoid
 from multi_linear_reg import LnrReg
 
 class LogReg(LnrReg):
-    
+
     def calc_hypothesis(self, input_row):
         theta_trans_X = super(LogReg, self).calc_hypothesis(input_row)
         return sigmoid(theta_trans_X)
@@ -28,46 +28,3 @@ class LogReg(LnrReg):
                 )
 
         return total_error / len(self.training_data)
-
-test_data = [
-    [1, 0.9, 0],
-    [5, 4, 0],
-    [6, 1, 0],
-    [8, 7, 0],
-    [1, 3, 1],
-    [1.1, 1.3, 1],
-    [5, 6, 1],
-    [6, 6.1, 1],
-    [4, 4.5, 1]
-]
-
-regression = LogReg()
-regression.load_data(test_data)
-regression.train()
-print regression.run([1, 0.5])
-print regression.run([5, 4])
-print regression.run([7, 5])
-print regression.run([8, 9])
-print regression.run([9, 11])
-print regression.run([10, 15])
-
-# test_data = [
-#     {'input': [0], 'output': 0},
-#     {'input': [4], 'output': 0},
-#     {'input': [4], 'output': 0},
-#     {'input': [4], 'output': 0},
-#     {'input': [6], 'output': 1},
-#     {'input': [6], 'output': 1},
-#     {'input': [6], 'output': 1},
-#     {'input': [10], 'output': 1},
-#     {'input': [7], 'output': 1}
-# ]
-
-# regression = LogReg(test_data)
-# regression.train()
-# print regression.run([1, 20])
-# print regression.run([1, 10])
-# print regression.run([1, 6])
-# print regression.run([1, 5.5])
-# print regression.run([1, 4])
-# print regression.run([1, 3])

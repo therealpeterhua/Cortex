@@ -18,6 +18,7 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 * Straighten out some of the spaghetti properties (ie. output_layer_i)
 * Delete all unnecessary code -- training examples at end, unused methods.
 * Should probably delete the underscores on properties -- just looks messy
+* Add a logistic regression example to readme
 
 Linear / Logistic Regression
 * Switch example to use multiple inputs

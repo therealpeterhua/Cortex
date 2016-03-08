@@ -7,8 +7,6 @@ import utils as ut
 
 class LnrReg(object):
     def __init__(self, data = None):
-        # PH:*** TAKE OPTIONS OF PARAMETERS, ALONG WITH DATA
-        # decompose in the load_data, or elsewhere, with the fn(**args)
         if data is not None:
             self.load_data(data)
 
@@ -25,34 +23,31 @@ class LnrReg(object):
         self.training_data = vl.standardize(data)
         self.add_training_bias()
 
-    def set_options(self, options):         # defaults that can be overridden at runtime
+    def set_options(self, options):
         used_properties = self.get_defaults()
         ut.replace_in(used_properties, options)
-        
+
         for prop_name, value in used_properties.iteritems():
             setattr(self, prop_name, value)
 
-        self.current_error = float('inf')
-        self._thetas = []
+        self.error = float('inf')
+        self.thetas = []
         self.build_thetas()
-    
+
     def get_defaults(self):
         return {
-            'log_progress': True,
-            'log_interval': 2000,
-            # Following 3 attributes govern the use of momentum in dynamically
-            # adjusting the learning rate. Setting 'use_driver' to False
-            # prevents the use of the quick_factor to speed up gradient descent
+            'learn_rate': 0.01,
+            'threshold': 0.00001,
+            'max_iters': 50000,
             'use_driver': True,
             'quick_factor': 1.1,
             'brake_factor': 0.6,
-            'learn_rate': 0.01,
-            'threshold': 0.00001,
-            'max_iters': 50000
+            'log_progress': True,
+            'log_interval': 2000
         }
 
     def build_thetas(self):
-        self._thetas = [0 for _ in self.training_data[0]['input']]
+        self.thetas = [0 for _ in self.training_data[0]['input']]
 
     def add_training_bias(self):
         for item in self.training_data:
@@ -61,64 +56,61 @@ class LnrReg(object):
     def add_bias(self, input_row):
         input_row.insert(0, 1)
 
-    def train(self, options = None):          #PH:*** set options...
+    def train(self, options = None):
         if options is None:
             options = {}
         self.set_options(options)
-        
+
         self.gradient_descent()
-        print( 'Thetas: ' + str(self._thetas) )
-        return self._thetas
 
     def run(self, input_row):
-        self.add_bias(input_row)                  # add bias
+        self.add_bias(input_row)
         return self.calc_hypothesis(input_row)
 
     def gradient_descent(self):
-        iterations = 0
+        iters = 0
 
         has_converged = False
-        while (not has_converged and iterations < self.max_iters):
-            old_error = self.current_error
-            
-            if self.log_progress and not iterations % self.log_interval:
-                self.log_params(iterations)
+        while (not has_converged and iters < self.max_iters):
+            old_error = self.error
+
+            if self.log_progress and not iters % self.log_interval:
+                self.log_info(iters)
             self.calc_new_thetas()
-            iterations += 1
-            
+            iters += 1
+
             has_converged = False
-            if self.current_error == old_error:
+            if self.error == old_error:
                 continue
-            elif abs(old_error - self.current_error) < self.threshold:
+            elif abs(old_error - self.error) < self.threshold:
                 has_converged = True
-            
-        print('======================================')
-        print('Finished regression in ' + str(iterations) + ' iterations')
+
+        self.log_finish(iters)
 
     # calculate and assign new weights, else revert to old ones
     def calc_new_thetas(self):
-        old_thetas, old_error = self._thetas, self.current_error
+        old_thetas, old_error = self.thetas, self.error
 
         partials = self.build_partials()
         new_thetas = [ curr_theta - self.learn_rate * partial_term
                         for partial_term, curr_theta
-                        in izip(partials, self._thetas) ]
+                        in izip(partials, self.thetas) ]
 
-        self._thetas = new_thetas
-        self.current_error = self.calc_error()
+        self.thetas = new_thetas
+        self.error = self.calc_error()
 
         # lower learn rate, and revert thetas and errors if grad descent fails to reduce error
-        if self.use_driver and self.current_error < old_error:
+        if self.use_driver and self.error < old_error:
             self.learn_rate *= self.quick_factor
-        elif self.current_error > old_error:
+        elif self.error > old_error:
             self.use_driver = False      # prevent scaling momentum up further
             self.learn_rate *= self.brake_factor
-            self._thetas, self.current_error = old_thetas, old_error
+            self.thetas, self.error = old_thetas, old_error
 
     def build_partials(self):
         partials = []
 
-        for j, theta in enumerate(self._thetas):
+        for j, theta in enumerate(self.thetas):
             sigma = 0
 
             zipped_data_iters = izip(self.input_iter, self.output_iter)
@@ -138,13 +130,7 @@ class LnrReg(object):
     def theta_trans_X(self, input_row):
         return sum( theta * input_val
                     for theta, input_val
-                    in izip(self._thetas, input_row) )
-
-    def log_params(self, num_iterations):
-        dividing_line = '--------------------------------------'
-        print('After %s iterations...\nThetas are %s\nError is %s\n%s' % (
-            num_iterations, self._thetas, self.current_error, dividing_line
-        ))
+                    in izip(self.thetas, input_row) )
 
     def calc_error(self):
         return self.avg_squared_error()
@@ -160,13 +146,14 @@ class LnrReg(object):
 
         return squared_err_sum / (2 * len(self.training_data))
 
-data = [
-  {'input': [4], 'output': [9]},      # [4, 0]   would also work
-  {'input': [2.5], 'output': [3]},    # [2.5, 3] would also work
-  {'input': [7], 'output': [21]},
-  {'input': [-2], 'output': [-15]}
-]
+    def log_info(self, num_iterations):
+        dividing_line = '--------------------------------------'
+        print('After %s iterations...\nThetas are %s\nError is %s\n%s' % (
+            num_iterations, self.thetas, self.error, dividing_line
+        ))
 
-regression = LnrReg(data)
-regression.train({'threshold': 0.00001})
-print regression.run([10])
+    def log_finish(self, iters):
+        print('======================================')
+        print('Finished regression in %s iterations') % iters
+        print('Final error is %s') % self.error
+        print('Final thetas are %s') % self.thetas
