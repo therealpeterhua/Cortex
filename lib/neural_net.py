@@ -11,25 +11,10 @@ NOTES ON XOR BATCH ANN GRADIENT DESCENT
 1) Low epsilon (0.15) tends all weights toward 0.5
 2) Having more nodes in hidden layer increases chance of accurate training. Bigger brainz
 
-- Follow rest of notes (set logistic and linear regression to take [0], [1] for outputs)
-- Implement error threshold for neural nets, and "convergence" theta-change threshold for logistic and linear regression
-- Set intelligent defaults for node_size, # hidden layers, etc.
-- Use intelligent epsilons!
-
-- Finish readme -- each section needs its own. ANN first.
-- Humanize all variable names. No thetas & alphas.
-- Wrap all these in a callable format. `lib`, etc.
-
-* Add in suggested epsilons per layer -- isn't there a simple number for this?
-* Print initialization conditions (number of hidden nodes, etc.).
-* Underscore the attributes you don't wish the user to set
-* Get rid of momentum altogether?
+* GET THE OVERARCHING LIBRARY ARCHITECTURE IMPLEMENTED!
 * See to calculation redundancies -- ie. calcing errors twice better for logging
-* Revise how you talk about 'momentum'. Either implement it correctly in neural_net, or not.
 * Add overarching library import! Can you namespace directly from the module?
-* Work out the bold driver here.
 * Go thru and address all comments, esp. ***
-* Strip underscores from property names?
 * Straighten out some of the spaghetti properties (ie. output_layer_i)
 * Delete all unnecessary code -- training examples at end, unused methods.
 * Should probably delete the underscores on properties -- just looks messy
@@ -159,6 +144,12 @@ class NeuralNet(object):
         weights.append(output_weights)
         return weights
 
+    def run(self, user_given_input_row):
+        NeuralNet.add_bias(user_given_input_row)
+
+        self.feed_forward(user_given_input_row)
+        return self.output_nodes
+
     def train(self, options = None):
         if options is None:
             options = {}
@@ -168,7 +159,7 @@ class NeuralNet(object):
         iters = 0
         while ( iters < self.max_iters and
                 self._total_error > self.error_threshold):
-            
+
             old_gradient = ut.deep_dup(self._gradients)
             self.reset_gradients()          #PH:*** don't do this for every row!
 
@@ -187,32 +178,11 @@ class NeuralNet(object):
 
         self.log_finish(iters)
 
-    def log_start(self):
-        print 'Began training process with architecture...\n%s' % self._sizes
-        print '...where each element is the number of nodes within a layer (including bias).'
-        print '=======================================================\n'
-
-    def log_info(self, iters):
-        dividing_line = '\n---------------------------------------\n'
-        print 'After %s iterations...\nTotal error: %s\nWeights: %s%s' % (
-            iters, self._total_error, self._weights, dividing_line
-        )
-
-    def log_finish(self, iters):
-        print '=======================================================\n'
-        print 'Finished training in %s epochs.\nFinal error is %s' % (iters, self._total_error)
-
     def reset_gradients(self):
         self._gradients = ut.fill_with(self._gradients, 0)
 
     def reset_deltas(self):
         self._deltas = ut.fill_with(self._deltas, 0)
-
-    def run(self, user_given_input_row):
-        NeuralNet.add_bias(user_given_input_row)
-
-        self.feed_forward(user_given_input_row)
-        return self.output_nodes
 
     #PH: reroute these loops, or use islice, so you don't gotta worry about +1, -1, etc.
     def feed_forward(self, input_row):
@@ -243,26 +213,18 @@ class NeuralNet(object):
 
             self.activate(layer_i + 1)
 
+    def activate(self, layer_i):
+        layer_nodes = self._nodes[layer_i]
+        for i, node_val in enumerate(layer_nodes):
+            # skip bias node of all but output layer (leave others as 1)
+            if i == 0 and layer_i != self.output_layer_i:
+                continue
+            self._nodes[layer_i][i] = ut.sigmoid(node_val)
+
     #PH: move closer to train() function in positioning O_O
     def back_prop(self, output_row):
         self.set_deltas(output_row)
-        self.accumulate_gradient(output_row)
-
-    def accumulate_gradient(self, output_row):
-        # REM: self._weights is exactly as formularized -- the first weight does indeed connect the first and second layers, and so on. len(self._weights) would be the output layer!
-        for layer_i in xrange(self.output_layer_i, 0, -1):
-            prev_layer_i = layer_i - 1
-
-            curr_deltas = self._deltas[layer_i]
-            prev_gradients = self._gradients[prev_layer_i]
-            prev_nodes = self._nodes[prev_layer_i]
-
-            self.fill_gradients(curr_deltas, prev_nodes, prev_gradients)
-
-    def fill_gradients(self, curr_deltas, prev_nodes, prev_gradients): #tested
-        for i, delta_row in enumerate(curr_deltas):
-            for j, node_val in enumerate(prev_nodes):
-                prev_gradients[i][j] += delta_row[0] * prev_nodes[j]
+        self.accumulate_gradients(output_row)
 
     def set_deltas(self, output_row):
         self._deltas[-1] = [ [predicted - actual]
@@ -297,6 +259,22 @@ class NeuralNet(object):
         node_value = self._nodes[layer][node_i]
         return node_value * (1 - node_value)
 
+    def accumulate_gradients(self, output_row):
+        # REM: self._weights is exactly as formularized -- the first weight does indeed connect the first and second layers, and so on. len(self._weights) would be the output layer!
+        for layer_i in xrange(self.output_layer_i, 0, -1):
+            prev_layer_i = layer_i - 1
+
+            curr_deltas = self._deltas[layer_i]
+            prev_gradients = self._gradients[prev_layer_i]
+            prev_nodes = self._nodes[prev_layer_i]
+
+            self.fill_gradients(curr_deltas, prev_nodes, prev_gradients)
+
+    def fill_gradients(self, curr_deltas, prev_nodes, prev_gradients): #tested
+        for i, delta_row in enumerate(curr_deltas):
+            for j, node_val in enumerate(prev_nodes):
+                prev_gradients[i][j] += delta_row[0] * prev_nodes[j]
+
     def postprocess_gradients(self):
         for l, layer_gradients in enumerate(self._gradients):
             for i, next_i_gradients in enumerate(layer_gradients):
@@ -308,7 +286,6 @@ class NeuralNet(object):
 
         self._total_error = self.calc_error()
 
-    #PH:*** FIX FUNCTION ORDER!
     def set_new_weights(self, old_gradient):
         #PH: implement momentum in a while loop here. Implement new_weights, check their errors... if higher, decrease learning rate
         for l, layer_weights in enumerate(self._weights):
@@ -319,14 +296,6 @@ class NeuralNet(object):
                     momentum_val = old_gradient[l][i][j] * self.momentum
                     change = (self.learn_rate * gradient_val) + momentum_val
                     next_i_weights[j] = weight - change
-
-    def activate(self, layer_i):
-        layer_nodes = self._nodes[layer_i]
-        for i, node_val in enumerate(layer_nodes):
-            # skip bias node of all but output layer (leave others as 1)
-            if i == 0 and layer_i != self.output_layer_i:
-                continue
-            self._nodes[layer_i][i] = ut.sigmoid(node_val)
 
     # I assume you use this after you run all the inputs and have the predicted outputs for every one?
     # Really, you need to do this one as you're looping through and calculating the output. In a neural net, the network itself IS the hypothesis Fn... remember that calc_error is the only place we ever call the hypothesis Fn from? Well, you're gonna need to do that now with the network... probably.
@@ -358,6 +327,21 @@ class NeuralNet(object):
         )
 
         return sum(all_weights_iter) * self.reg_rate / (2 * self.data_size)
+
+    def log_start(self):
+        print 'Began training process with architecture...\n%s' % self._sizes
+        print '...where each element is the number of nodes within a layer (including bias).'
+        print '=======================================================\n'
+
+    def log_info(self, iters):
+        dividing_line = '\n---------------------------------------\n'
+        print 'After %s iterations...\nTotal error: %s\nWeights: %s%s' % (
+            iters, self._total_error, self._weights, dividing_line
+        )
+
+    def log_finish(self, iters):
+        print '=======================================================\n'
+        print 'Finished training in %s epochs.\nFinal error is %s' % (iters, self._total_error)
 
 
 net = NeuralNet([

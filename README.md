@@ -37,7 +37,7 @@ net.run([1, 1])     # 0.029
 Each element of the output vector must be between 0 and 1. Trains multi-class scenarios via multiple-element output vectors (ie. `[1, 0, 0]`, `[0, 1, 0]`, `[0, 0, 1]` for Class I, Class II, Class III). This multi-class output API will be abstracted away in the future so you can just use unique integers and strings to represent different classes.
 
 #####Adjustable model parameters (`options` dict in XOR example)
-  - `hidden_sizes`: Sets the hidden node architecture using a list. Model will have `len(hidden_sizes)` hidden layers, with each element being the size of its corresponding layer. [2, 3, 4] creates 3 hidden layers of with 2, 3, and 4 nodes respectively. Uses intelligent defaults otherwise. The more hidden layers / nodes per layer, the lower the final training error (generally), and the more computationally expensive the training process.
+  - `hidden_sizes`: Sets the hidden node architecture using a list. Model will have `len(hidden_sizes)` hidden layers, with each element being the size of its corresponding layer. [2, 3, 4] creates 3 hidden layers of with 2, 3, and 4 nodes respectively. Uses reasonable defaults otherwise. The more hidden layers / nodes per layer, the lower the final training error (generally), and the more computationally expensive the training process.
   - `learn_rate`: Determines how aggressively gradient descent runs (default 0.25). Setting too low will result in less progress made per iteration (and longer processing time). Setting too high may result in "overshooting" the optimum, or a divergent learning process.
   - `error_threshold`: The maximum acceptable average error of the model (default 0.05). The learning process will conclude once errors are below the threshold or `max_iters` has been reached, whichever comes first.
   - `max_iters`: The maximum # of iterations to be performed before concluding (default 10000).
@@ -92,6 +92,7 @@ Same API as linear regression, hallelujah.
 
 ###TODOs:
 - Dry up boilerplate setup code into separate module
+- More intelligent setting of epsilons
 - Pruning algo for neural network to "trim" redundant nodes
 - Serialization of weights, allowing user to save and resume work on large data sets
 - Prettify multi-class learning for ANN by vectorizing user-given output number into 1s and 0s.

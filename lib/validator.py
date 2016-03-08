@@ -29,7 +29,7 @@ def standardize(data):
         output_idx = len(list_item) - 1
         data[row_i] = {
             'input': list_item[0:output_idx],
-            'output': list_item[output_idx]
+            'output': [list_item[output_idx]]
         }
 
     return data
