@@ -62,7 +62,7 @@ data = [
 
 options = {'log_progress': True}
 
-regression = LnrReg()         # also accepts `net = LnrReg(data)`
+regression = LnrReg()         # also accepts `regression = LnrReg(data)`
 regression.load_data(data)
 regression.train(options)
 
