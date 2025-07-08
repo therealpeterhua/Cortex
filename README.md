@@ -1,4 +1,4 @@
-##Cortex
+## Cortex
 
 A classification/regression tool written in the snake tongue. Implements a neural network, and logistic + linear regression, using no external libraries.
 
@@ -6,8 +6,8 @@ Performs batch gradient descent across all techniques, and employs sigmoid activ
 
 Vectorized implementations have been implemented in Octave, and will be ported to NumPy eventually. In the meantime, please enjoy some for loops and list comprehensions.
 
-###Neural Network
-####Example: Training the XOR function...
+### Neural Network
+#### Example: Training the XOR function...
 ```python
 from cortex import NeuralNet
 
@@ -33,10 +33,10 @@ print net.run([1, 1])     # 0.029
 
 <sup>NOTE: Occasionally, your neural nets may return *higher error* results than anticipated. If so, try training the network again. Batch descent is sensitive to initial conditions and can hang on local minima, but each training call will randomize the starting weights.</sup>
 
-#####Guidelines:
+##### Guidelines:
 Handles any number of input features of any size, and any number of output elements between 0 and 1 (preferably binary -- 0 or 1). Trains multi-class scenarios via multiple-element output vectors (ie. `[1, 0, 0]`, `[0, 1, 0]`, `[0, 0, 1]` representing Class I, Class II, Class III). This multi-class output API will be abstracted away in the future so you can just use unique integers and strings to represent different classes. Handles row vectors where last element is the output, `[x1, x2, y]`, as well as the `{'input': [x1, x2], 'output': [y]}` format used in our neural net. Formatting must be consistent throughout training data.
 
-#####Optional Model Parameters (`options` dict in XOR example)
+##### Optional Model Parameters (`options` dict in XOR example)
   - `hidden_sizes`: Sets the hidden node architecture using a list. Model will have `len(hidden_sizes)` hidden layers, with each element being the size of its corresponding layer. [2, 3, 4] creates 3 hidden layers of with 2, 3, and 4 nodes respectively. Uses reasonable defaults otherwise. The more hidden layers / nodes per layer, the lower the final training error (generally), and the more computationally expensive the training process.
   - `learn_rate`: Determines how aggressively gradient descent runs (default 0.25). Setting too low will result in less progress made per iteration (and longer processing time). Setting too high may result in "overshooting" the optimum, or a divergent learning process.
   - `error_threshold`: The maximum acceptable average error of the model (default 0.05). The learning process will conclude once errors are below the threshold or `max_iters` has been reached, whichever comes first.
@@ -48,8 +48,8 @@ Handles any number of input features of any size, and any number of output eleme
   - `log_interval`: Numerical value (default 1000). Model will log relevant stats every `log_interval` iterations.
 
 
-###Linear Regression
-####Example: Training y = 2 + 4(x1) + 3(x2) function...
+### Linear Regression
+#### Example: Training y = 2 + 4(x1) + 3(x2) function...
 ```python
 from cortex import LnrReg
 
@@ -69,10 +69,10 @@ regression.train(options)
 print regression.run([2, 2])        # 15.999
 ```
 
-#####Guidelines:
+##### Guidelines:
 Handles any number of input features of any size. For now, only supports output of 1 element. Handles row vectors where last element is the output, `[x1, x2, y]`, as well as the `{'input': [x1, x2], 'output': [y]}` format used in our neural net. Formatting must be consistent throughout training data. The model will log a theta vector at the conclusion of training, which can corresponds to the "weights" of each respective input (with the first weight being the bias, or intercept, value).
 
-#####Optional Model Parameters (`options` dict in example)
+##### Optional Model Parameters (`options` dict in example)
   - `threshold`: Instead of using an error_threshold like in neural nets, linear regression uses a convergence threshold (default 0.00001). If the difference between the errors of 2 successful gradient descents are below the threshold, the learning process will conclude.
   - `max_iters`: Same concept as in neural net (default 50000). The learning process will stop once `max_iters` epochs are reached, unless it has already converged.
   - `learn_rate`: Same concept as neural net (default 0.01). You shouldn't need to adjust this if you leave momentum on.
@@ -83,8 +83,8 @@ Handles any number of input features of any size. For now, only supports output 
   - `log_interval`: Same as in neural net (default 2000).
 
 
-###Logistic Regression
-####Example: Training the x1 = x2 decision boundary...
+### Logistic Regression
+#### Example: Training the x1 = x2 decision boundary...
 ```python
 from cortex import LogReg
 
@@ -109,14 +109,14 @@ print regression.run([9, 10])       # 1.00
 print regression.run([10, 15])      # 1.00
 ```
 
-#####Guidelines:
+##### Guidelines:
 Handles any number of input features of any size. For now, only supports output of 1 element. For now, only supports output of 1 element, of discrete value 0 or 1. Will support multi-class in the future. Also supports both `[x1, x2, y]` and `{'input': [x1, x2], 'output': [y]}` formats. Formatting must be consistent throughout training data. As with linear regression, the model will log a theta vector at the conclusion of training.
 
-#####Optional Model Parameters
+##### Optional Model Parameters
 Same API as linear regression, hallelujah.
 
 
-###TODOs:
+### TODOs:
 - Dry up boilerplate setup code into separate module
 - Pruning for neural nets to "trim" redundant nodes
 - More intelligent setting of epsilons
